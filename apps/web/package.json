@@ -1,7 +1,11 @@
 {
-  "name": "@viteach-generated/web",
+  "name": "@vi-teach/web",
   "version": "0.0.1",
   "private": true,
+  "scripts": {
+    "test": "vitest run --config vitest.config.ts",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
   "dependencies": {
     "next": "~16.1.6",
     "react": "^19.0.0",
