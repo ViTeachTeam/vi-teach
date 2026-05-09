@@ -141,7 +141,7 @@ export function AuthGate() {
         <Card className="auth-card">
           <CardHeader>
             <CardTitle>Supabase is not configured</CardTitle>
-            <CardDescription>Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY.</CardDescription>
+            <CardDescription>Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY (or NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY).</CardDescription>
           </CardHeader>
           <CardContent>
             <Alert variant="destructive">
