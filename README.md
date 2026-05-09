@@ -134,12 +134,70 @@ A built-in sample class is loaded by default for judging.
 
 ## Example CSV files (5)
 
-Ready-to-import files are in `apps/web/public/examples`:
+Ready-to-import example files are available in `apps/web/public/examples/`:
 
-- `example-1-math-grade10.csv` – Math class, grade 10
-- `example-2-physics-grade10.csv` – Physics class, grade 10
-- `example-3-english-grade11.csv` – English class, grade 11
-- `example-4-chemistry-grade12.csv` – Chemistry class, grade 12
-- `example-5-homeroom-mixed-risk.csv` – Homeroom with mixed risk distribution, grade 10
+- [example-1-math-grade10.csv](apps/web/public/examples/example-1-math-grade10.csv) – Math class, grade 10, 20 students
+- [example-2-physics-grade10.csv](apps/web/public/examples/example-2-physics-grade10.csv) – Physics class, grade 10, 18 students
+- [example-3-english-grade11.csv](apps/web/public/examples/example-3-english-grade11.csv) – English class, grade 11, 22 students
+- [example-4-chemistry-grade12.csv](apps/web/public/examples/example-4-chemistry-grade12.csv) – Chemistry class, grade 12, 19 students
+- [example-5-homeroom-mixed-risk.csv](apps/web/public/examples/example-5-homeroom-mixed-risk.csv) – Homeroom with mixed risk distribution, grade 10, 20 students
 
 All files use Vietnamese header names and semicolon delimiters to match Vietnam LMS export formats.
+
+## Testing Guide
+
+### Quick Start (No Auth Required)
+1. Run `npm run dev` and open `http://localhost:4200`
+2. You'll see the dashboard with a built-in sample class (10A1 with 20 students)
+3. Try uploading one of the example CSV files using the "Upload Data" button
+4. Switch between English and Vietnamese using the language toggle in the top-right menu
+
+### Test with Demo Teachers
+1. Seed demo teachers:
+   ```bash
+   npm run seed:multiple-teachers
+   ```
+2. Visit the login page and sign in with any teacher:
+   ```
+   Email: teacher.1@viteach.app
+   Password: TeacherDemo#2026
+   ```
+   (or teacher.2, teacher.3, etc.)
+3. Each teacher has a pre-loaded 10A1 class with sample data
+
+### Testing CSV Upload
+1. Click "Upload Data" on the dashboard
+2. Select one of the example CSV files from `apps/web/public/examples/`
+3. Wait for analysis to complete (shows animated loading modal)
+4. Dashboard updates with new analysis, KPIs, and risk distribution
+5. Click on a student in the "Students Requiring Attention" list to see detailed risk reasons and trend chart
+6. Use Lumi chat widget (bottom-right) to ask follow-up questions about the class
+
+### Testing Language Switching
+1. Click the teacher profile menu (top-right)
+2. Select "Language" section
+3. Toggle between "Tiếng Việt" and "English"
+4. All UI, suggestions, and analysis text updates immediately
+5. Language preference is saved to browser localStorage
+
+### Testing Lumi Chat
+1. Open the floating chat widget (bottom-right: "Chat with ViTeach")
+2. Ask questions like:
+   - "How should I address the high-risk students?"
+   - "What patterns do you see in the class data?"
+   - "Tôi nên làm gì với các học sinh khó khăn?" (Vietnamese)
+3. Lumi responds with suggestions based on class analysis
+4. All chat history is preserved in the chat panel
+
+### Testing Without OpenAI
+The app works fully without OpenAI credentials:
+- Analysis pipeline runs locally
+- Lumi returns sensible fallback suggestions based on deterministic rules
+- Chat widget provides helpful responses using fallback logic
+- Set `OPENAI_API_KEY` to test with live OpenAI API
+
+### Testing Multilingual Support
+- **All** UI elements support English and Vietnamese
+- Dashboard, KPIs, student lists, risk reasons, and suggestions all translate
+- Language preference persists across sessions
+- Try uploading CSV files in Vietnamese format with Vietnamese headers
