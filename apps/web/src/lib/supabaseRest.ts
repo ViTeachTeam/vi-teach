@@ -1,5 +1,17 @@
 import type { ClassAnalysis, LumiAnalysis } from '../types/score';
 
+type ApiAuditInput = {
+  workspaceId: string;
+  endpoint: string;
+  requestId: string;
+  statusCode: number;
+  durationMs: number;
+  rateLimited: boolean;
+  ipAddress?: string;
+  userAgent?: string;
+  errorMessage?: string;
+};
+
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
@@ -25,6 +37,22 @@ export async function persistChat(className: string, question: string, answer: s
     role: 'teacher',
     content: question,
     assistant_content: answer
+  });
+}
+
+export async function persistApiAudit(input: ApiAuditInput) {
+  if (!isConfigured()) return;
+
+  await postJson('api_audit_logs', {
+    workspace_id: input.workspaceId,
+    endpoint: input.endpoint,
+    request_id: input.requestId,
+    status_code: input.statusCode,
+    duration_ms: input.durationMs,
+    rate_limited: input.rateLimited,
+    ip_address: input.ipAddress || null,
+    user_agent: input.userAgent || null,
+    error_message: input.errorMessage || null
   });
 }
 
