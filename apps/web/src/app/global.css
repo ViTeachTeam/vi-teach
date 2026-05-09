@@ -683,21 +683,10 @@ button {
   font-weight: 700;
 }
 
-.auth-demo-cred {
-  padding: 10px 12px;
-  border-radius: 8px;
-  border: 1px dashed #ced4e5;
-  background: #f8f9ff;
-}
-
-.auth-demo-cred p {
-  margin: 0 0 4px;
-  color: #3b496b;
-  font-size: 13px;
-}
-
-.auth-demo-cred p:last-child {
-  margin-bottom: 0;
+.auth-note {
+  margin: 0;
+  color: var(--vt-muted);
+  font-size: 12px;
 }
 
 @media (max-width: 1180px) {

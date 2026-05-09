@@ -15,17 +15,14 @@ type TeacherProfile = {
   full_name: string;
 };
 
-const DEMO_EMAIL = 'demo.teacher@viteach.app';
-const DEMO_PASSWORD = 'DemoTeacher#2026';
-
 export function AuthGate() {
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<TeacherProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
-  const [email, setEmail] = useState(DEMO_EMAIL);
-  const [password, setPassword] = useState(DEMO_PASSWORD);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
 
   const clientError = useMemo(() => {
     try {
@@ -163,16 +160,11 @@ export function AuthGate() {
       <main className="auth-shell">
         <Card className="auth-card">
           <CardHeader>
-            <CardTitle>Teacher Login</CardTitle>
-            <CardDescription>Use Supabase Auth for a realistic judge demo flow.</CardDescription>
+            <CardTitle>Teacher Portal</CardTitle>
+            <CardDescription>Sign in to access your classes and AI insights.</CardDescription>
           </CardHeader>
           <CardContent className="auth-form">
-            <div className="auth-demo-cred">
-              <p><strong>Demo account</strong></p>
-              <p>Email: {DEMO_EMAIL}</p>
-              <p>Password: {DEMO_PASSWORD}</p>
-            </div>
-            <Input value={email} onChange={(event) => setEmail(event.target.value)} placeholder="teacher@school.edu.vn" />
+            <Input value={email} onChange={(event) => setEmail(event.target.value)} placeholder="Email" />
             <Input value={password} onChange={(event) => setPassword(event.target.value)} placeholder="Password" type="password" />
             {error ? (
               <Alert variant="destructive">
@@ -181,6 +173,7 @@ export function AuthGate() {
                 <AlertDescription>{error}</AlertDescription>
               </Alert>
             ) : null}
+            <p className="auth-note">Need access? Contact your school admin.</p>
             <Button disabled={submitting} onClick={() => void signIn()}>
               <LogIn />
               {submitting ? 'Signing in...' : 'Sign in'}
