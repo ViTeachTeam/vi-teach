@@ -5,6 +5,8 @@ const aliases: Record<keyof StudentScore, string[]> = {
   name: ['student_name', 'name', 'ho_ten', 'họ tên', 'hoten'],
   gender: ['gender', 'gioi_tinh'],
   className: ['class_name', 'class', 'lop'],
+  teacherName: ['teacher_name', 'teacher', 'giao_vien', 'ten_giao_vien'],
+  subject: ['subject', 'mon_hoc', 'mon'],
   oralScore: ['oral_score', 'diem_mieng', 'mieng'],
   score15m: ['score_15m', 'diem_15p', '15p'],
   bonus: ['bonus', 'diem_cong'],

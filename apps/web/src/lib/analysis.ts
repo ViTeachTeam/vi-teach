@@ -11,6 +11,7 @@ const scoreFields: { key: keyof StudentScore; label: string; phase: number }[] =
 ];
 
 export function analyzeClass(students: StudentScore[], className = '10A1'): ClassAnalysis {
+  const { teacherName, subject } = extractClassMetadata(students);
   const analyzed = students.map(analyzeStudent).sort((a, b) => riskWeight(b.riskLevel) - riskWeight(a.riskLevel) || a.average - b.average);
   const riskCounts = {
     high: analyzed.filter((student) => student.riskLevel === 'high').length,
@@ -31,6 +32,8 @@ export function analyzeClass(students: StudentScore[], className = '10A1'): Clas
 
   return {
     className: students[0]?.className || className,
+    teacherName,
+    subject,
     students: analyzed,
     totalStudents: analyzed.length,
     attentionCount: riskCounts.high + riskCounts.medium,
@@ -123,4 +126,14 @@ function clamp(value: number, min: number, max: number) {
 
 function round(value: number) {
   return Math.round(value * 10) / 10;
+}
+
+function extractClassMetadata(students: StudentScore[]) {
+  const firstWithTeacher = students.find((student) => student.teacherName?.trim())?.teacherName?.trim();
+  const firstWithSubject = students.find((student) => student.subject?.trim())?.subject?.trim();
+
+  return {
+    teacherName: firstWithTeacher || 'Giáo viên',
+    subject: firstWithSubject || 'Chưa cung cấp'
+  };
 }

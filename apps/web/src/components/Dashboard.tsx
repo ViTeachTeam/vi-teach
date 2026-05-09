@@ -141,17 +141,17 @@ export function Dashboard() {
         <Separator />
         <Card className="teacher-card">
           <Avatar>
-            <AvatarFallback>L</AvatarFallback>
+            <AvatarFallback>{initials(analysis.teacherName)}</AvatarFallback>
           </Avatar>
           <div>
-            <strong>Nguyễn Thị Lan</strong>
-            <span>Giáo viên Toán</span>
+            <strong>{analysis.teacherName || 'Giáo viên'}</strong>
+            <span>{`Giáo viên ${analysis.subject || 'chưa cung cấp môn'}`}</span>
           </div>
         </Card>
         <Card className="class-card">
           <span>Lớp hiện tại</span>
           <strong>{analysis.className}</strong>
-          <p>Môn: Toán</p>
+          <p>Môn: {analysis.subject || 'Chưa cung cấp'}</p>
           <p>Sĩ số: {analysis.totalStudents} học sinh</p>
           <Button variant="outline">Đổi lớp <span>→</span></Button>
         </Card>
@@ -160,7 +160,7 @@ export function Dashboard() {
       <section className="content">
         <header className="topbar">
           <div>
-            <h1>Xin chào cô Lan</h1>
+            <h1>{`Xin chào ${analysis.teacherName || 'giáo viên'}`}</h1>
             <p>Theo dõi lớp {analysis.className}, phát hiện học sinh cần hỗ trợ và nhận gợi ý giảng dạy từ Lumi.</p>
           </div>
           <div className="actions">
@@ -195,7 +195,7 @@ export function Dashboard() {
 
         <section className="kpi-grid">
           <Kpi title="Tổng học sinh" value={analysis.totalStudents} note="đã phân tích" accent="violet" icon={<Users />} />
-          <Kpi title="Học sinh cần chú ý" value={analysis.attentionCount} note="so với kỳ trước" delta="+38%" accent="amber" icon={<BellIcon />} />
+          <Kpi title="Học sinh cần chú ý" value={analysis.attentionCount} note="tỷ lệ trên sĩ số lớp" delta={`${percent(analysis.attentionCount, analysis.totalStudents)}%`} accent="amber" icon={<BellIcon />} />
           <Kpi title="Nguy cơ cao" value={analysis.riskCounts.high} note="cần hỗ trợ sớm" accent="red" icon={<AlertCircle />} />
           <Kpi title="Nguy cơ trung bình" value={analysis.riskCounts.medium} note="cần theo dõi" accent="amber" icon={<BarChart3 />} />
           <Kpi title="Nguy cơ thấp" value={analysis.riskCounts.low} note="đang tiến bộ" accent="green" icon={<CheckCircle2 />} />
@@ -383,4 +383,15 @@ function navIcon(index: number) {
 
 function BellIcon() {
   return <GraduationCap aria-hidden="true" />;
+}
+
+function initials(name?: string) {
+  if (!name) return 'GV';
+  const letters = name
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase() || '')
+    .join('');
+  return letters || 'GV';
 }

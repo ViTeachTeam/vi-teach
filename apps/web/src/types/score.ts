@@ -5,6 +5,8 @@ export type StudentScore = {
   name: string;
   gender?: string;
   className?: string;
+  teacherName?: string;
+  subject?: string;
   oralScore?: number;
   score15m?: number;
   bonus?: number;
@@ -33,6 +35,8 @@ export type StudentAnalysis = {
 
 export type ClassAnalysis = {
   className: string;
+  teacherName?: string;
+  subject?: string;
   students: StudentAnalysis[];
   totalStudents: number;
   attentionCount: number;
