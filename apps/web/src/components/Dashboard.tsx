@@ -665,14 +665,55 @@ function Sparkline({ student }: { student: StudentAnalysis }) {
 }
 
 function TrendChart({ student, language }: { student: StudentAnalysis; language: Language }) {
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+  const chartWidth = 316;
+  const chartHeight = 140;
+  const offsetX = 24;
+  const offsetY = 24;
+  const total = Math.max(student.trendPoints.length - 1, 1);
+  const pointsWithCoordinates = student.trendPoints.map((point, index) => {
+    const x = offsetX + (index / total) * chartWidth;
+    const y = offsetY + chartHeight - (point.value / 10) * chartHeight;
+    return { ...point, x, y, index };
+  });
+  const hoveredPoint = typeof hoveredIndex === 'number' ? pointsWithCoordinates[hoveredIndex] : null;
+
   return (
     <div className="trend">
       <h3>{language === 'en' ? 'Score Trend' : 'Xu hướng điểm số'}</h3>
-      <svg viewBox="0 0 360 190" aria-label={language === 'en' ? 'Score trend chart' : 'Biểu đồ xu hướng điểm số'}>
-        {[0, 1, 2, 3].map((line) => <line key={line} x1="24" x2="340" y1={32 + line * 40} y2={32 + line * 40} />)}
-        <polyline points={points(student, 316, 140, 24, 24)} />
-        {student.trendPoints.map((point, index) => <text key={point.label} x={24 + index * (316 / Math.max(student.trendPoints.length - 1, 1))} y="178">{translateDynamicText(point.label, language)}</text>)}
-      </svg>
+      <div className="trend-chart-shell" onMouseLeave={() => setHoveredIndex(null)}>
+        <svg viewBox="0 0 360 190" aria-label={language === 'en' ? 'Score trend chart' : 'Biểu đồ xu hướng điểm số'}>
+          {[0, 1, 2, 3].map((line) => <line key={line} x1="24" x2="340" y1={32 + line * 40} y2={32 + line * 40} />)}
+          <polyline points={points(student, 316, 140, 24, 24)} />
+          {pointsWithCoordinates.map((point) => (
+            <g key={`${point.label}-${point.index}`}>
+              <circle className="trend-dot" cx={point.x} cy={point.y} r="4.5" />
+              <circle
+                className="trend-dot-hit"
+                cx={point.x}
+                cy={point.y}
+                r="11"
+                onMouseEnter={() => setHoveredIndex(point.index)}
+              >
+                <title>{`${translateDynamicText(point.label, language)}: ${point.value.toFixed(1)}`}</title>
+              </circle>
+            </g>
+          ))}
+          {student.trendPoints.map((point, index) => <text key={point.label} x={24 + index * (316 / Math.max(student.trendPoints.length - 1, 1))} y="178">{translateDynamicText(point.label, language)}</text>)}
+        </svg>
+        {hoveredPoint ? (
+          <div
+            className="trend-tooltip"
+            style={{
+              left: `${(hoveredPoint.x / 360) * 100}%`,
+              top: `${(hoveredPoint.y / 190) * 100}%`
+            }}
+          >
+            <strong>{translateDynamicText(hoveredPoint.label, language)}</strong>
+            <span>{language === 'en' ? 'Score' : 'Điểm'}: {hoveredPoint.value.toFixed(1)}</span>
+          </div>
+        ) : null}
+      </div>
     </div>
   );
 }
