@@ -63,15 +63,15 @@ type DashboardProps = {
   onSignOut?: () => void | Promise<void>;
 };
 
-const initialAnalysis = analyzeClass(parseCsv(sampleCsv));
-const initialLumi = fallbackLumiAnalysis(initialAnalysis);
+const initialAnalysis = analyzeClass(parseCsv(sampleCsv), '10A1', 'en');
+const initialLumi = fallbackLumiAnalysis(initialAnalysis, 'en');
 const initialClassId = buildClassId(initialAnalysis.className, initialAnalysis.subject);
 
 export function Dashboard({ workspaceIdOverride, teacherNameOverride, teacherEmail, onSignOut }: DashboardProps) {
   const [language, setLanguage] = useState<Language>(() => {
-    if (typeof window === 'undefined') return 'vi';
+    if (typeof window === 'undefined') return 'en';
     const existing = window.localStorage.getItem('viteach_lang');
-    return existing === 'en' ? 'en' : 'vi';
+    return existing === 'vi' ? 'vi' : 'en';
   });
   const [expandedTeacher, setExpandedTeacher] = useState(false);
   const [workspaceId] = useState(() => {
@@ -201,7 +201,7 @@ export function Dashboard({ workspaceIdOverride, teacherNameOverride, teacherEma
       });
     }
     try {
-      const local = analyzeClass(parseCsv(nextCsv));
+      const local = analyzeClass(parseCsv(nextCsv), '10A1', language);
       const localLumi = fallbackLumiAnalysis(local, language);
       setAnalysis(local);
       syncSelectedStudents(local);

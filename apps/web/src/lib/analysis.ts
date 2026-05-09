@@ -10,8 +10,8 @@ const scoreFields: { key: keyof StudentScore; label: string; phase: number }[] =
   { key: 'classActivity', label: 'Hoạt động lớp', phase: 7 }
 ];
 
-export function analyzeClass(students: StudentScore[], className = '10A1'): ClassAnalysis {
-  const { teacherName, subject } = extractClassMetadata(students);
+export function analyzeClass(students: StudentScore[], className = '10A1', language: Language = 'en'): ClassAnalysis {
+  const { teacherName, subject } = extractClassMetadata(students, language);
   const analyzed = students.map(analyzeStudent).sort((a, b) => riskWeight(b.riskLevel) - riskWeight(a.riskLevel) || a.average - b.average);
   const riskCounts = {
     high: analyzed.filter((student) => student.riskLevel === 'high').length,
@@ -30,6 +30,14 @@ export function analyzeClass(students: StudentScore[], className = '10A1'): Clas
     .sort((a, b) => b.count - a.count)
     .slice(0, 4);
 
+  const riskLabels = language === 'en'
+    ? { high: 'High Risk', medium: 'Medium Risk', low: 'Low Risk' }
+    : { high: 'Nguy cơ cao', medium: 'Nguy cơ trung bình', low: 'Nguy cơ thấp' };
+
+  const overviewText = language === 'en'
+    ? `Class has ${analyzed.length} students. ${riskCounts.high} need early support and ${riskCounts.medium} need monitoring. Focus on reinforcing foundational knowledge, reducing missing assignments, and providing individualized intervention for students with declining scores.`
+    : `Lớp có ${analyzed.length} học sinh, ${riskCounts.high} em cần hỗ trợ sớm và ${riskCounts.medium} em cần theo dõi. Trọng tâm nên là củng cố nền tảng, giảm thiếu bài tập và can thiệp cá nhân cho nhóm có xu hướng điểm giảm.`;
+
   return {
     className: students[0]?.className || className,
     teacherName,
@@ -39,18 +47,18 @@ export function analyzeClass(students: StudentScore[], className = '10A1'): Clas
     attentionCount: riskCounts.high + riskCounts.medium,
     riskCounts,
     riskDistribution: [
-      { label: 'Nguy cơ cao', value: riskCounts.high, color: '#ff4d5f', level: 'high' },
-      { label: 'Nguy cơ trung bình', value: riskCounts.medium, color: '#f59e0b', level: 'medium' },
-      { label: 'Nguy cơ thấp', value: riskCounts.low, color: '#35c987', level: 'low' }
+      { label: riskLabels.high, value: riskCounts.high, color: '#ff4d5f', level: 'high' },
+      { label: riskLabels.medium, value: riskCounts.medium, color: '#f59e0b', level: 'medium' },
+      { label: riskLabels.low, value: riskCounts.low, color: '#35c987', level: 'low' }
     ],
     issues,
-    suggestions: buildSuggestions(riskCounts, issues),
-    overview: `Lớp có ${analyzed.length} học sinh, ${riskCounts.high} em cần hỗ trợ sớm và ${riskCounts.medium} em cần theo dõi. Trọng tâm nên là củng cố nền tảng, giảm thiếu bài tập và can thiệp cá nhân cho nhóm có xu hướng điểm giảm.`,
+    suggestions: buildSuggestions(riskCounts, issues, language),
+    overview: overviewText,
     generatedAt: new Date().toISOString()
   };
 }
 
-export function analyzeStudent(student: StudentScore): StudentAnalysis {
+export function analyzeStudent(student: StudentScore, language: Language = 'vi'): StudentAnalysis {
   const points = scoreFields
     .map((field) => ({ label: field.label, value: student[field.key], phase: field.phase }))
     .filter((point): point is { label: string; value: number; phase: number } => typeof point.value === 'number')
@@ -61,9 +69,9 @@ export function analyzeStudent(student: StudentScore): StudentAnalysis {
   const trend = points.length >= 2 ? round(points[points.length - 1].value - points[0].value) : 0;
   const volatility = round(standardDeviation(adjusted));
   const weakCategories = points.filter((point) => point.value < 6).map((point) => point.label);
-  if ((student.homeworkMissing ?? 0) >= 3) weakCategories.push('Thiếu bài tập về nhà');
-  if ((student.participation ?? 10) < 5.5) weakCategories.push('Ít tham gia phát biểu');
-  if ((student.attendance ?? 100) < 85) weakCategories.push('Vắng nhiều');
+  if ((student.homeworkMissing ?? 0) >= 3) weakCategories.push(language === 'en' ? 'Missing homework' : 'Thiếu bài tập về nhà');
+  if ((student.participation ?? 10) < 5.5) weakCategories.push(language === 'en' ? 'Low participation' : 'Ít tham gia phát biểu');
+  if ((student.attendance ?? 100) < 85) weakCategories.push(language === 'en' ? 'Frequent absence' : 'Vắng nhiều');
 
   const riskLevel = getRiskLevel(average, trend, volatility, weakCategories.length);
   const strengths = points.filter((point) => point.value >= 8).map((point) => point.label).slice(0, 3);
@@ -76,7 +84,7 @@ export function analyzeStudent(student: StudentScore): StudentAnalysis {
     riskLevel,
     weakCategories,
     strengths,
-    issue: getPrimaryIssue(average, trend, weakCategories),
+    issue: getPrimaryIssue(average, trend, weakCategories, language),
     trendPoints: points.map(({ label, value }) => ({ label, value: round(value) }))
   };
 }
@@ -94,7 +102,15 @@ function getRiskLevel(average: number, trend: number, volatility: number, weakCo
   return 'low';
 }
 
-function getPrimaryIssue(average: number, trend: number, weakCategories: string[]) {
+function getPrimaryIssue(average: number, trend: number, weakCategories: string[], language: Language = 'vi') {
+  if (language === 'en') {
+    if (trend <= -1.5) return 'Declining score trend';
+    if (weakCategories.includes('Missing homework')) return 'Missing homework';
+    if (weakCategories.includes('Frequent absence')) return 'Frequent absence';
+    if (average < 6) return 'Weak foundational knowledge';
+    if (weakCategories.includes('Low participation')) return 'Low participation';
+    return 'Stable progress';
+  }
   if (trend <= -1.5) return 'Điểm số giảm dần';
   if (weakCategories.includes('Thiếu bài tập về nhà')) return 'Thiếu bài tập về nhà';
   if (weakCategories.includes('Vắng nhiều')) return 'Vắng nhiều';
@@ -103,10 +119,27 @@ function getPrimaryIssue(average: number, trend: number, weakCategories: string[
   return 'Đang tiến bộ ổn định';
 }
 
-function buildSuggestions(riskCounts: Record<RiskLevel, number>, issues: { label: string; count: number }[]) {
-  const suggestions = ['Tổ chức buổi ôn tập nền tảng cho nhóm học sinh nguy cơ cao.', 'Ghép học sinh khá với nhóm trung bình để hỗ trợ theo cặp.', 'Theo dõi tiến bộ sau 2 tuần bằng một bài kiểm tra ngắn.'];
-  if (riskCounts.high > 0) suggestions.unshift(`Đặt lịch gặp 1:1 với ${riskCounts.high} học sinh nguy cơ cao trong tuần này.`);
-  if (issues.some((issue) => issue.label.includes('Thiếu bài'))) suggestions.push('Gửi nhắc nhở bài tập cá nhân hóa cho nhóm thiếu bài nhiều lần.');
+function buildSuggestions(riskCounts: Record<RiskLevel, number>, issues: { label: string; count: number }[], language: Language = 'en') {
+  let suggestions: string[];
+
+  if (language === 'en') {
+    suggestions = [
+      'Organize a foundation-building review session for high-risk students.',
+      'Pair stronger students with mid-level students for peer support.',
+      'Check progress in 2 weeks using a brief assessment.'
+    ];
+    if (riskCounts.high > 0) suggestions.unshift(`Schedule 1:1 meetings with ${riskCounts.high} high-risk student(s) this week.`);
+    if (issues.some((issue) => issue.label.toLowerCase().includes('missing'))) suggestions.push('Send personalized homework reminders to students with frequent missing assignments.');
+  } else {
+    suggestions = [
+      'Tổ chức buổi ôn tập nền tảng cho nhóm học sinh nguy cơ cao.',
+      'Ghép học sinh khá với nhóm trung bình để hỗ trợ theo cặp.',
+      'Theo dõi tiến bộ sau 2 tuần bằng một bài kiểm tra ngắn.'
+    ];
+    if (riskCounts.high > 0) suggestions.unshift(`Đặt lịch gặp 1:1 với ${riskCounts.high} học sinh nguy cơ cao trong tuần này.`);
+    if (issues.some((issue) => issue.label.includes('Thiếu bài'))) suggestions.push('Gửi nhắc nhở bài tập cá nhân hóa cho nhóm thiếu bài nhiều lần.');
+  }
+
   return suggestions.slice(0, 4);
 }
 
@@ -131,12 +164,12 @@ function round(value: number) {
   return Math.round(value * 10) / 10;
 }
 
-function extractClassMetadata(students: StudentScore[]) {
+function extractClassMetadata(students: StudentScore[], language: Language = 'vi') {
   const firstWithTeacher = students.find((student) => student.teacherName?.trim())?.teacherName?.trim();
   const firstWithSubject = students.find((student) => student.subject?.trim())?.subject?.trim();
 
   return {
-    teacherName: firstWithTeacher || 'Giáo viên',
-    subject: firstWithSubject || 'Chưa cung cấp'
+    teacherName: firstWithTeacher || (language === 'en' ? 'Teacher' : 'Giáo viên'),
+    subject: firstWithSubject || (language === 'en' ? 'Not provided' : 'Chưa cung cấp')
   };
 }

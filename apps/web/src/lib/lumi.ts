@@ -1,6 +1,6 @@
 import type { ClassAnalysis, Language, LumiAnalysis } from '../types/score';
 
-export function fallbackLumiAnalysis(analysis: ClassAnalysis, language: Language = 'vi'): LumiAnalysis {
+export function fallbackLumiAnalysis(analysis: ClassAnalysis, language: Language = 'en'): LumiAnalysis {
   const topIssues = analysis.issues.map((issue) => `${translateIssue(issue.label, language)}: ${issue.count} ${language === 'en' ? 'students' : 'học sinh'}`);
   const highRisk = analysis.students.filter((student) => student.riskLevel === 'high').slice(0, 3);
 
@@ -28,7 +28,7 @@ export function fallbackLumiAnalysis(analysis: ClassAnalysis, language: Language
   };
 }
 
-export async function generateLumiAnalysis(analysis: ClassAnalysis, language: Language = 'vi'): Promise<LumiAnalysis> {
+export async function generateLumiAnalysis(analysis: ClassAnalysis, language: Language = 'en'): Promise<LumiAnalysis> {
   if (!process.env.OPENAI_API_KEY) return fallbackLumiAnalysis(analysis, language);
 
   const payload = {
@@ -87,7 +87,7 @@ export async function generateLumiAnalysis(analysis: ClassAnalysis, language: La
   }
 }
 
-export async function generateLumiChat(question: string, analysis: ClassAnalysis, language: Language = 'vi') {
+export async function generateLumiChat(question: string, analysis: ClassAnalysis, language: Language = 'en') {
   if (!process.env.OPENAI_API_KEY) {
     return language === 'en'
       ? `Lumi suggests: for your question "${question}", prioritize the ${analysis.riskCounts.high} high-risk students, review common issues such as ${analysis.issues.map((issue) => translateIssue(issue.label, language)).join(', ') || 'insufficient data'}, and run a short check-in activity in two weeks.`
