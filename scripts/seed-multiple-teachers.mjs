@@ -32,7 +32,9 @@ const password = 'TeacherDemo#2026';
 
 async function seedTeacher(teacher) {
   const { email, name, subject, school } = teacher;
-  const workspaceId = `ws_${email.split('@')[0]}`;
+  const workspaceId = `ws_${email
+    .split('@')[0]
+    .replace(/[^a-zA-Z0-9_-]/g, '_')}`;
 
   try {
     let userId;

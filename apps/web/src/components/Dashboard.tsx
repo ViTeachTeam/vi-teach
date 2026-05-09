@@ -78,11 +78,15 @@ export function Dashboard({ workspaceIdOverride, teacherNameOverride, teacherEma
     if (typeof window === 'undefined') return 'demo';
     const storageKey = 'viteach_workspace_id';
     if (workspaceIdOverride) {
-      window.localStorage.setItem(storageKey, workspaceIdOverride);
-      return workspaceIdOverride;
+      const safeOverride = sanitizeWorkspaceId(workspaceIdOverride) || `ws_${Math.random().toString(36).slice(2, 10)}`;
+      window.localStorage.setItem(storageKey, safeOverride);
+      return safeOverride;
     }
     const existing = window.localStorage.getItem(storageKey);
-    if (existing) return existing;
+    if (existing) {
+      const safeExisting = sanitizeWorkspaceId(existing);
+      if (safeExisting) return safeExisting;
+    }
     const next = `ws_${Math.random().toString(36).slice(2, 10)}`;
     window.localStorage.setItem(storageKey, next);
     return next;
@@ -583,7 +587,7 @@ export function Dashboard({ workspaceIdOverride, teacherNameOverride, teacherEma
           <Card className="chat-widget">
             <div className="chat-widget-header">
               <div>
-                <h3>{language === 'en' ? 'Chat with Lumi' : 'Chat với Lumi'}</h3>
+                <h3>{language === 'en' ? 'Chat with ViTeach' : 'Trò chuyện với trợ lý ViTeach'}</h3>
                 <p>{language === 'en' ? 'Ask for support plans and teaching suggestions.' : 'Hỏi thêm về kế hoạch hỗ trợ và gợi ý giảng dạy.'}</p>
               </div>
               <Button variant="ghost" size="sm" className="chat-widget-close" onClick={() => setIsChatOpen(false)}>
@@ -617,7 +621,7 @@ export function Dashboard({ workspaceIdOverride, teacherNameOverride, teacherEma
 
         <Button className="chat-widget-toggle" onClick={() => setIsChatOpen((open) => !open)}>
           <MessageCircle aria-hidden="true" />
-          {language === 'en' ? 'Chat with Lumi' : 'Chat với Lumi'}
+          {language === 'en' ? 'Chat with ViTeach' : 'Chat với trợ lý ViTeach'}
         </Button>
       </div>
 
@@ -960,6 +964,13 @@ function buildPotentialSuggestions(student: StudentAnalysis, language: Language)
       ? `Track progress with a challenge rubric every two weeks to sustain growth momentum.`
       : `Theo dõi tiến độ bằng rubric thử thách mỗi 2 tuần để duy trì đà phát triển.`
   ];
+}
+
+function sanitizeWorkspaceId(value: string) {
+  const trimmed = value.trim();
+  if (!trimmed) return '';
+  const cleaned = trimmed.replace(/[^a-zA-Z0-9_-]/g, '_');
+  return cleaned.length > 64 ? cleaned.slice(0, 64) : cleaned;
 }
 
 function getAttentionStudents(analysis: ClassAnalysis) {
