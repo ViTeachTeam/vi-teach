@@ -42,6 +42,15 @@ const initialAnalysis = analyzeClass(parseCsv(sampleCsv));
 const initialLumi = fallbackLumiAnalysis(initialAnalysis);
 
 export function Dashboard() {
+  const [workspaceId] = useState(() => {
+    if (typeof window === 'undefined') return 'demo';
+    const storageKey = 'viteach_workspace_id';
+    const existing = window.localStorage.getItem(storageKey);
+    if (existing) return existing;
+    const next = `ws_${Math.random().toString(36).slice(2, 10)}`;
+    window.localStorage.setItem(storageKey, next);
+    return next;
+  });
   const [csv, setCsv] = useState(sampleCsv);
   const [analysis, setAnalysis] = useState<ClassAnalysis>(initialAnalysis);
   const [lumi, setLumi] = useState<LumiAnalysis>(initialLumi);
@@ -72,7 +81,7 @@ export function Dashboard() {
       const response = await fetch('/api/analyze', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ csv: nextCsv, className: local.className })
+        body: JSON.stringify({ csv: nextCsv, className: local.className, workspaceId })
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || 'Không thể phân tích dữ liệu.');
@@ -102,7 +111,7 @@ export function Dashboard() {
       const response = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ question: nextQuestion, analysis })
+        body: JSON.stringify({ question: nextQuestion, analysis, workspaceId })
       });
       const data = await response.json();
       setChat((messages) => [...messages, { role: 'lumi', content: data.answer || data.error }]);

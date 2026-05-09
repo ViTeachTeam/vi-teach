@@ -5,19 +5,21 @@ import { persistChat } from '../../../src/lib/supabaseRest';
 
 const MAX_QUESTION_LENGTH = 500;
 const MAX_ANALYSIS_BYTES = 200_000;
+const MAX_WORKSPACE_ID_LENGTH = 64;
 
 export async function POST(request: Request) {
   try {
     const body = await readJsonBody(request);
     const question = validateQuestion(body.question);
     const analysis = validateAnalysis(body.analysis);
+    const workspaceId = validateWorkspaceId(body.workspaceId);
 
-    if (!question || !analysis) {
+    if (!question || !analysis || workspaceId === null) {
       return NextResponse.json({ error: 'Thiếu câu hỏi hoặc bối cảnh lớp học.' }, { status: 400 });
     }
 
     const answer = await generateLumiChat(question, analysis);
-    await persistChat(analysis.className, question, answer);
+    await persistChat(analysis.className, question, answer, workspaceId || 'demo');
 
     return NextResponse.json({ answer });
   } catch {
@@ -67,4 +69,14 @@ function isRiskCounts(value: unknown) {
 
 function isNonNegativeNumber(value: unknown) {
   return typeof value === 'number' && Number.isFinite(value) && value >= 0;
+}
+
+function validateWorkspaceId(value: unknown) {
+  if (value === undefined) return '';
+  if (typeof value !== 'string') return null;
+  const workspaceId = value.trim();
+  if (!workspaceId) return '';
+  if (workspaceId.length > MAX_WORKSPACE_ID_LENGTH) return null;
+  if (!/^[a-zA-Z0-9_-]+$/.test(workspaceId)) return null;
+  return workspaceId;
 }

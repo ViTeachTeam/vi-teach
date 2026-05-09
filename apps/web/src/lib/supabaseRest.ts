@@ -5,22 +5,22 @@ const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 let warnedMissingConfig = false;
 
-export async function persistAnalysis(analysis: ClassAnalysis, lumi: LumiAnalysis) {
+export async function persistAnalysis(analysis: ClassAnalysis, lumi: LumiAnalysis, workspaceId: string) {
   if (!isConfigured()) return;
 
   await postJson('analyses', {
-    workspace_id: 'demo',
+    workspace_id: workspaceId,
     class_name: analysis.className,
     computed_analysis: analysis,
     lumi_analysis: lumi
   });
 }
 
-export async function persistChat(className: string, question: string, answer: string) {
+export async function persistChat(className: string, question: string, answer: string, workspaceId: string) {
   if (!isConfigured()) return;
 
   await postJson('chat_messages', {
-    workspace_id: 'demo',
+    workspace_id: workspaceId,
     class_name: className,
     role: 'teacher',
     content: question,

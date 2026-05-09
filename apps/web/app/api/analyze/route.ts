@@ -6,6 +6,7 @@ import { persistAnalysis } from '../../../src/lib/supabaseRest';
 
 const MAX_CSV_BYTES = 1_000_000;
 const MAX_CLASS_NAME_LENGTH = 80;
+const MAX_WORKSPACE_ID_LENGTH = 64;
 
 export async function POST(request: Request) {
   try {
@@ -24,10 +25,15 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Tên lớp không hợp lệ.' }, { status: 400 });
     }
 
+    const workspaceId = validateWorkspaceId(body.workspaceId);
+    if (workspaceId === null) {
+      return NextResponse.json({ error: 'Workspace ID không hợp lệ.' }, { status: 400 });
+    }
+
     const students = parseCsv(csv);
     const analysis = analyzeClass(students, className || '10A1');
     const lumi = await generateLumiAnalysis(analysis);
-    await persistAnalysis(analysis, lumi);
+    await persistAnalysis(analysis, lumi, workspaceId || 'demo');
 
     return NextResponse.json({ analysis, lumi });
   } catch (error) {
@@ -55,4 +61,14 @@ function validateClassName(value: unknown) {
   if (!className) return '';
   if (className.length > MAX_CLASS_NAME_LENGTH) return null;
   return className;
+}
+
+function validateWorkspaceId(value: unknown) {
+  if (value === undefined) return '';
+  if (typeof value !== 'string') return null;
+  const workspaceId = value.trim();
+  if (!workspaceId) return '';
+  if (workspaceId.length > MAX_WORKSPACE_ID_LENGTH) return null;
+  if (!/^[a-zA-Z0-9_-]+$/.test(workspaceId)) return null;
+  return workspaceId;
 }
