@@ -116,9 +116,9 @@ export function Dashboard() {
       <aside className="sidebar">
         <div className="brand">
           <div className="brand-mark">V</div>
-          <div>
+          <div className="brand-copy">
             <strong>ViTeach</strong>
-            <span>Hiểu học sinh - Dạy đúng cách</span>
+            <span className="brand-slogan">Hiểu học sinh - Dạy đúng cách</span>
           </div>
         </div>
         <nav className="nav">
@@ -152,7 +152,7 @@ export function Dashboard() {
         <header className="topbar">
           <div>
             <h1>Xin chào cô Lan</h1>
-            <p>Hiểu học sinh - Dạy đúng cách</p>
+            <p>Theo dõi lớp {analysis.className}, phát hiện học sinh cần hỗ trợ và nhận gợi ý giảng dạy từ Lumi.</p>
           </div>
           <div className="actions">
             <input

@@ -70,7 +70,7 @@ button {
 
 .app-shell {
   display: grid;
-  grid-template-columns: 256px minmax(0, 1fr);
+  grid-template-columns: 292px minmax(0, 1fr);
   align-items: start;
   min-height: 100vh;
 }
@@ -81,9 +81,9 @@ button {
   align-self: start;
   display: flex;
   flex-direction: column;
-  gap: 22px;
+  gap: 18px;
   height: 100vh;
-  padding: 28px 18px;
+  padding: 24px 18px;
   overflow-y: auto;
   overscroll-behavior: contain;
   background: linear-gradient(180deg, #fbfbff 0%, #f5f3ff 100%);
@@ -95,6 +95,10 @@ button {
   display: flex;
   align-items: center;
   gap: 12px;
+}
+
+.brand {
+  min-width: 0;
 }
 
 .brand-mark,
@@ -111,11 +115,23 @@ button {
 
 .brand strong {
   display: block;
-  font-size: 28px;
+  font-size: 27px;
   line-height: 1;
 }
 
-.brand span,
+.brand-copy {
+  min-width: 0;
+}
+
+.brand-slogan {
+  display: block;
+  margin-top: 6px;
+  color: var(--vt-muted);
+  white-space: nowrap;
+  font-size: 12px;
+  line-height: 1.25;
+}
+
 .teacher-card span,
 .class-card span,
 .class-card p,
@@ -127,8 +143,8 @@ button {
 
 .nav {
   display: grid;
-  gap: 8px;
-  margin-top: 8px;
+  gap: 6px;
+  margin-top: 4px;
 }
 
 .nav button {
@@ -137,7 +153,7 @@ button {
   justify-content: flex-start;
   gap: 12px;
   width: 100%;
-  min-height: 48px;
+  min-height: 44px;
   padding: 0 16px;
   color: #263252;
   background: transparent;
@@ -159,7 +175,7 @@ button {
 
 .teacher-card,
 .class-card {
-  padding: 16px;
+  padding: 14px;
   border: 1px solid var(--vt-line);
   border-radius: 8px;
   background: rgba(255, 255, 255, 0.75);
@@ -176,8 +192,8 @@ button {
 
 .class-card strong {
   display: block;
-  margin: 10px 0 6px;
-  font-size: 24px;
+  margin: 8px 0 4px;
+  font-size: 23px;
 }
 
 .class-card button {
