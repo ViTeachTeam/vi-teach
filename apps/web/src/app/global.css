@@ -82,10 +82,11 @@ button {
   align-self: start;
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 12px;
   height: 100vh;
-  padding: 24px 18px;
+  padding: 20px 16px;
   overflow-y: auto;
+  overflow-x: hidden;
   overscroll-behavior: contain;
   background: linear-gradient(180deg, #fbfbff 0%, #f5f3ff 100%);
   border-right: 1px solid var(--vt-line);
@@ -126,7 +127,7 @@ button {
 
 .brand-slogan {
   display: block;
-  margin-top: 6px;
+  margin-top: 4px;
   color: var(--vt-muted);
   white-space: nowrap;
   font-size: 12px;
@@ -144,8 +145,8 @@ button {
 
 .nav {
   display: grid;
-  gap: 6px;
-  margin-top: 4px;
+  gap: 4px;
+  margin-top: 6px;
 }
 
 .nav button {
@@ -185,6 +186,9 @@ button {
 .teacher-card-wrapper {
   position: relative;
   margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
 .teacher-card {
