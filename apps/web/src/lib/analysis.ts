@@ -12,7 +12,7 @@ const scoreFields: { key: keyof StudentScore; label: string; phase: number }[] =
 
 export function analyzeClass(students: StudentScore[], className = '10A1', language: Language = 'en'): ClassAnalysis {
   const { teacherName, subject } = extractClassMetadata(students, language);
-  const analyzed = students.map(analyzeStudent).sort((a, b) => riskWeight(b.riskLevel) - riskWeight(a.riskLevel) || a.average - b.average);
+  const analyzed = students.map((s) => analyzeStudent(s, language)).sort((a, b) => riskWeight(b.riskLevel) - riskWeight(a.riskLevel) || a.average - b.average);
   const riskCounts = {
     high: analyzed.filter((student) => student.riskLevel === 'high').length,
     medium: analyzed.filter((student) => student.riskLevel === 'medium').length,
