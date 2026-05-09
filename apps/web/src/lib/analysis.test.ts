@@ -9,6 +9,21 @@ describe('CSV parsing', () => {
     expect(students).toHaveLength(20);
   });
 
+  it('accepts Vietnamese CSV with semicolon delimiter and comma decimals', () => {
+    const vietnameseCsv = [
+      'Họ tên;Lớp học;Môn học;Điểm miệng;Điểm 15 phút;Điểm giữa kỳ;Điểm cuối kỳ;Chuyên cần;Thiếu bài tập',
+      'Nguyễn Văn A;10A1;Toán;7,5;8,0;7,0;8,2;95;1',
+      'Trần Thị B;10A1;Toán;6,8;7,1;6,9;7,0;92;2'
+    ].join('\n');
+
+    const students = parseCsv(vietnameseCsv);
+    expect(students).toHaveLength(2);
+    expect(students[0].name).toBe('Nguyễn Văn A');
+    expect(students[0].oralScore).toBe(7.5);
+    expect(students[0].score15m).toBe(8);
+    expect(students[0].final).toBe(8.2);
+  });
+
   it('rejects missing student names', () => {
     expect(() => parseCsv('student_name,final\n,8')).toThrow('thiếu họ tên');
   });
