@@ -450,12 +450,46 @@ export function Dashboard({ workspaceIdOverride, teacherNameOverride, teacherEma
           </Panel>
         </section>
 
+        <section className="potential-grid">
+          <Panel title={language === 'en' ? 'Potential Students Spotlight' : 'Học sinh tiềm năng nổi bật'} language={language}>
+            {potentialStudents.length === 0 ? (
+              <p className="potential-empty">
+                {language === 'en'
+                  ? 'No potential group identified yet. Upload more recent assessments to surface candidates.'
+                  : 'Chưa xác định được nhóm tiềm năng. Hãy tải thêm dữ liệu đánh giá gần đây để phát hiện học sinh nổi bật.'}
+              </p>
+            ) : (
+              <div className="potential-list">
+                {potentialStudents.slice(0, 5).map((student) => (
+                  <button
+                    className={selected?.student.id === student.student.id ? 'potential-row selected' : 'potential-row'}
+                    key={student.student.id}
+                    onClick={() => setSelectedId(student.student.id)}
+                  >
+                    <span>
+                      <b>{student.student.name}</b>
+                      <small>{language === 'en' ? 'Avg score' : 'Điểm TB'}: {student.average.toFixed(1)}</small>
+                    </span>
+                    <span>
+                      <b>{language === 'en' ? 'Trend' : 'Xu hướng'}</b>
+                      <small>{formatTrend(student.trend, language)}</small>
+                    </span>
+                    <span>
+                      <b>{language === 'en' ? 'Top strengths' : 'Điểm mạnh'}</b>
+                      <small>{student.strengths.slice(0, 2).map((item) => translateDynamicText(item, language)).join(', ') || (language === 'en' ? 'Consistent performance' : 'Ổn định qua các giai đoạn')}</small>
+                    </span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </Panel>
+        </section>
+
         <section className="lower-grid">
           <Panel title={language === 'en' ? 'Students Requiring Attention' : 'Học sinh cần chú ý'} className="student-list-panel" language={language}>
             <div className="table-head">
               <span>{language === 'en' ? 'Student' : 'Học sinh'}</span>
               <span>{language === 'en' ? 'Risk Level' : 'Mức độ rủi ro'}</span>
-              <span>{language === 'en' ? 'Trend' : 'Xu hướng'}</span>
               <span>{language === 'en' ? 'Main Issue' : 'Vấn đề chính'}</span>
             </div>
             {analysis.students.slice(0, 6).map((student) => (
@@ -466,7 +500,6 @@ export function Dashboard({ workspaceIdOverride, teacherNameOverride, teacherEma
               >
                 <span><b>{student.student.name}</b><small>{language === 'en' ? 'ID' : 'SBD'}: {student.student.id}</small></span>
                 <RiskPill level={student.riskLevel} language={language} />
-                <Sparkline student={student} />
                 <span>{translateDynamicText(student.issue, language)}</span>
               </button>
             ))}
@@ -488,9 +521,9 @@ export function Dashboard({ workspaceIdOverride, teacherNameOverride, teacherEma
                 <div className="insight-box">
                   <strong>Lumi Insight</strong>
                   <h4>{language === 'en' ? 'Risk Reasons' : 'Lý do rủi ro'}</h4>
-                  <ul>{selected.weakCategories.slice(0, 4).map((item) => <li key={item}>{translateDynamicText(item, language)}</li>)}</ul>
+                  <ul>{selected.weakCategories.slice(0, 4).map((item) => <li key={item}>{buildRiskReasonDetail(selected, item, language)}</li>)}</ul>
                   <h4>{language === 'en' ? 'Lumi Suggestions' : 'Lumi gợi ý'}</h4>
-                  <ul>{lumi.meetingSuggestions.slice(0, 3).map((item) => <li key={item}>{item}</li>)}</ul>
+                  <ul>{buildStudentSuggestions(selected, language).map((item) => <li key={item}>{item}</li>)}</ul>
                 </div>
               </div>
             </Panel>
@@ -672,10 +705,6 @@ function RiskPill({ level, language }: { level: RiskLevel; language: Language })
   return <Badge className={`risk-pill ${level}`} variant={variant}>{riskLabel(level, language)}</Badge>;
 }
 
-function Sparkline({ student }: { student: StudentAnalysis }) {
-  return <svg className="spark" viewBox="0 0 110 38" aria-hidden="true"><polyline points={points(student, 110, 38)} /></svg>;
-}
-
 function TrendChart({ student, language }: { student: StudentAnalysis; language: Language }) {
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const chartWidth = 316;
@@ -741,6 +770,97 @@ function points(student: StudentAnalysis, width: number, height: number, offsetX
 
 function percent(value: number, total: number) {
   return total ? Math.round((value / total) * 100) : 0;
+}
+
+function formatTrend(trend: number, language: Language) {
+  if (trend > 0) {
+    return language === 'en' ? `+${trend.toFixed(1)} improving` : `+${trend.toFixed(1)} đang cải thiện`;
+  }
+  if (trend < 0) {
+    return language === 'en' ? `${trend.toFixed(1)} declining` : `${trend.toFixed(1)} đang giảm`;
+  }
+  return language === 'en' ? 'Stable' : 'Ổn định';
+}
+
+function buildRiskReasonDetail(student: StudentAnalysis, reason: string, language: Language) {
+  const localizedReason = translateDynamicText(reason, language);
+
+  if (reason === 'Thiếu bài tập về nhà') {
+    const missed = student.student.homeworkMissing ?? 0;
+    return language === 'en'
+      ? `${localizedReason}: Missing ${missed} homework tasks, which can weaken retention and exam readiness.`
+      : `${localizedReason}: Thiếu ${missed} bài tập, làm giảm khả năng ghi nhớ và sẵn sàng cho bài kiểm tra.`;
+  }
+
+  if (reason === 'Ít tham gia phát biểu') {
+    const participation = student.student.participation ?? 0;
+    return language === 'en'
+      ? `${localizedReason}: Participation score is ${participation.toFixed(1)}/10, showing low classroom engagement.`
+      : `${localizedReason}: Điểm tham gia là ${participation.toFixed(1)}/10, thể hiện mức độ tương tác trên lớp còn thấp.`;
+  }
+
+  if (reason === 'Vắng nhiều') {
+    const attendance = student.student.attendance ?? 0;
+    return language === 'en'
+      ? `${localizedReason}: Attendance is ${attendance.toFixed(0)}%, creating gaps in lesson continuity.`
+      : `${localizedReason}: Tỷ lệ chuyên cần ${attendance.toFixed(0)}%, dễ tạo khoảng trống kiến thức theo tiến độ bài học.`;
+  }
+
+  const point = student.trendPoints.find((item) => item.label === reason);
+  if (point) {
+    return language === 'en'
+      ? `${localizedReason}: Current score is ${point.value.toFixed(1)}/10, below the expected threshold (6.0).`
+      : `${localizedReason}: Điểm hiện tại là ${point.value.toFixed(1)}/10, thấp hơn ngưỡng kỳ vọng (6.0).`;
+  }
+
+  return language === 'en'
+    ? `${localizedReason}: This factor is contributing to a higher support priority for this student.`
+    : `${localizedReason}: Yếu tố này đang góp phần làm tăng mức ưu tiên hỗ trợ cho học sinh.`;
+}
+
+function buildStudentSuggestions(student: StudentAnalysis, language: Language) {
+  const name = student.student.name;
+  const suggestions: string[] = [];
+
+  suggestions.push(
+    language === 'en'
+      ? `Schedule a 1:1 check-in with ${name} this week to align goals and support priorities.`
+      : `Lên lịch gặp 1:1 với ${name} trong tuần này để thống nhất mục tiêu và ưu tiên hỗ trợ.`
+  );
+
+  if ((student.student.homeworkMissing ?? 0) >= 3) {
+    suggestions.push(
+      language === 'en'
+        ? `Set a 2-week homework recovery plan for ${name} with clear submission checkpoints.`
+        : `Thiết lập kế hoạch bù bài tập 2 tuần cho ${name} với các mốc nộp bài rõ ràng.`
+    );
+  }
+
+  if ((student.student.attendance ?? 100) < 85) {
+    suggestions.push(
+      language === 'en'
+        ? `Follow up attendance for ${name} and coordinate with guardian if absence risk continues.`
+        : `Theo dõi chuyên cần của ${name} và phối hợp với phụ huynh nếu nguy cơ nghỉ học tiếp diễn.`
+    );
+  }
+
+  if ((student.student.participation ?? 10) < 5.5) {
+    suggestions.push(
+      language === 'en'
+        ? `Use low-pressure speaking prompts to increase ${name}'s class participation step by step.`
+        : `Dùng câu hỏi dẫn dắt áp lực thấp để tăng dần mức tham gia phát biểu của ${name}.`
+    );
+  }
+
+  if (suggestions.length < 3) {
+    suggestions.push(
+      language === 'en'
+        ? `Assign ${name} a focused practice set on weak skills and review progress after one week.`
+        : `Giao bộ bài tập trọng tâm theo kỹ năng còn yếu cho ${name} và rà soát tiến độ sau 1 tuần.`
+    );
+  }
+
+  return suggestions.slice(0, 3);
 }
 
 function navIcon(index: number) {

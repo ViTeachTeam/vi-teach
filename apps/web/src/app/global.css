@@ -458,6 +458,61 @@ button {
   margin-top: 18px;
 }
 
+.potential-grid {
+  margin-top: 18px;
+}
+
+.potential-empty {
+  margin: 0;
+  color: var(--vt-muted);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.potential-list {
+  display: grid;
+  gap: 10px;
+}
+
+.potential-row {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1fr 150px 1.1fr;
+  gap: 12px;
+  align-items: start;
+  padding: 12px;
+  border: 1px solid #edf0f8;
+  border-radius: 10px;
+  background: #fff;
+  text-align: left;
+}
+
+.potential-row:hover {
+  border-color: #d9def5;
+  background: #fbfbff;
+}
+
+.potential-row.selected {
+  border-color: #b6b3ff;
+  background: #f6f5ff;
+}
+
+.potential-row span {
+  display: grid;
+  gap: 2px;
+}
+
+.potential-row b {
+  font-size: 13px;
+  color: #1e2750;
+}
+
+.potential-row small {
+  font-size: 12px;
+  color: var(--vt-muted);
+  line-height: 1.4;
+}
+
 .panel {
   overflow: hidden;
   padding: 0;
@@ -599,7 +654,7 @@ button {
 .table-head,
 .student-row {
   display: grid;
-  grid-template-columns: 1.3fr 142px 110px 1.1fr;
+  grid-template-columns: 1.4fr 142px 1.2fr;
   gap: 14px;
   align-items: center;
 }
@@ -1089,6 +1144,7 @@ button {
 
   .kpi-grid,
   .dashboard-grid,
+  .potential-row,
   .lower-grid,
   .chat-panel {
     grid-template-columns: 1fr;
