@@ -10,7 +10,10 @@
   --popover: 0 0% 100%;
   --popover-foreground: 229 52% 14%;
   --primary: 243 75% 59%;
-  --primary-foreground: 0 0% 100%;
+    display: grid;
+    gap: 12px;
+    min-height: 150px;
+    padding: 18px;
   --secondary: 247 100% 97%;
   --secondary-foreground: 229 52% 14%;
   --muted: 225 31% 95%;
@@ -53,13 +56,11 @@
 }
 
 body {
-  margin: 0;
   background: var(--vt-bg);
   color: var(--vt-ink);
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
-button,
 input {
   font: inherit;
 }
@@ -374,7 +375,7 @@ button {
 .kpi-grid {
   display: grid;
   grid-template-columns: repeat(6, minmax(0, 1fr));
-  gap: 16px;
+  gap: 14px;
 }
 
 .kpi,
@@ -392,25 +393,58 @@ button {
 }
 
 .kpi-content {
-  padding: 20px;
+  display: grid;
+  gap: 12px;
+  min-height: 150px;
+  padding: 18px;
 }
 
-.kpi-content > span,
+.kpi-header,
 .panel h3,
 .chat-panel h2 {
   font-weight: 800;
 }
 
-.kpi-value {
+.kpi-header {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
+  justify-content: space-between;
   gap: 12px;
-  margin: 14px 0 4px;
+}
+
+.kpi-header span {
+  display: block;
+  max-width: 140px;
+  color: var(--vt-ink);
+  font-size: 15px;
+  line-height: 1.2;
+}
+
+.kpi-header i {
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  margin-left: auto;
+  border-radius: 50%;
+}
+
+.kpi-header i svg {
+  width: 20px;
+  height: 20px;
+}
+
+.kpi-value-row {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-top: -2px;
 }
 
 .kpi strong {
-  font-size: 34px;
-  line-height: 1;
+  font-size: 38px;
+  line-height: 0.95;
 }
 
 .kpi em {
@@ -422,21 +456,13 @@ button {
 .kpi i {
   display: grid;
   place-items: center;
-  width: 54px;
-  height: 54px;
-  margin-left: auto;
-  border-radius: 50%;
-}
-
-.kpi i svg {
-  width: 22px;
-  height: 22px;
 }
 
 .kpi p {
   margin: 0;
   color: var(--vt-muted);
-  font-size: 13px;
+  font-size: 12px;
+  line-height: 1.35;
 }
 
 .kpi i.violet { background: #ede9ff; }
@@ -884,7 +910,7 @@ button {
 }
 
 .insight-list li::before {
-  content: "•";
+  content: "*";
   position: absolute;
   left: 2px;
   top: 0;
@@ -1006,11 +1032,41 @@ button {
   min-height: 40px;
 }
 
+.chat-widget-input button {
+  min-height: 40px;
+  padding: 0 16px;
+  color: #fff;
+  background: linear-gradient(135deg, #3f37d8 0%, #312cc7 100%);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  box-shadow: 0 12px 22px rgba(49, 44, 199, 0.3);
+}
+
+.chat-widget-input button:hover {
+  color: #fff;
+  background: linear-gradient(135deg, #4b43eb 0%, #3731d8 100%);
+}
+
+.chat-widget-input button svg {
+  color: currentColor;
+}
+
 .chat-widget-toggle {
   min-height: 46px;
   border-radius: 999px;
   padding: 0 16px;
-  box-shadow: 0 14px 26px rgba(79, 70, 229, 0.35);
+  color: #fff;
+  background: linear-gradient(135deg, #5548f5 0%, #4138dd 100%);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow: 0 14px 26px rgba(65, 56, 221, 0.35);
+}
+
+.chat-widget-toggle:hover {
+  color: #fff;
+  background: linear-gradient(135deg, #5f53fb 0%, #4a40ea 100%);
+}
+
+.chat-widget-toggle svg {
+  color: currentColor;
 }
 
 .chat-input input {
@@ -1046,6 +1102,19 @@ button {
 .auth-form button {
   min-height: 44px;
   font-weight: 700;
+  color: #fff;
+  background: linear-gradient(135deg, #3f37d8 0%, #312cc7 100%);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  box-shadow: 0 12px 22px rgba(49, 44, 199, 0.3);
+}
+
+.auth-form button:hover {
+  color: #fff;
+  background: linear-gradient(135deg, #4b43eb 0%, #3731d8 100%);
+}
+
+.auth-form button svg {
+  color: currentColor;
 }
 
 .auth-note {

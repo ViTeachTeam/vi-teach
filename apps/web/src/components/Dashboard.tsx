@@ -324,7 +324,7 @@ export function Dashboard({ workspaceIdOverride, teacherNameOverride, teacherEma
           <div className="brand-mark">V</div>
           <div className="brand-copy">
             <strong>ViTeach</strong>
-            <span className="brand-slogan">{language === 'en' ? 'Understand Students - Teach Smarter' : 'Hiểu học sinh - Dạy đúng cách'}</span>
+            <span className="brand-slogan">{language === 'en' ? 'Understand Students - Teach the Right Way' : 'Hiểu học sinh - Dạy đúng cách'}</span>
           </div>
         </div>
         <nav className="nav">
@@ -729,8 +729,14 @@ function Kpi({ title, value, note, delta, accent, icon }: { title: string; value
   return (
     <Card className="kpi">
       <CardContent className="kpi-content">
-        <span>{title}</span>
-        <div className="kpi-value"><strong>{value}</strong>{delta ? <em>{delta}</em> : null}<i className={accent}>{icon}</i></div>
+        <div className="kpi-header">
+          <span>{title}</span>
+          <i className={accent}>{icon}</i>
+        </div>
+        <div className="kpi-value-row">
+          <strong>{value}</strong>
+          {delta ? <em>{delta}</em> : null}
+        </div>
         <p>{note}</p>
       </CardContent>
     </Card>
