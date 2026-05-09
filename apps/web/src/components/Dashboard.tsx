@@ -12,9 +12,11 @@ import {
   FileUp,
   GraduationCap,
   LayoutDashboard,
+  MessageCircle,
   Send,
   Settings,
   Upload,
+  X,
   Users
 } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -113,6 +115,7 @@ export function Dashboard({ workspaceIdOverride, teacherNameOverride, teacherEma
   });
   const [question, setQuestion] = useState('');
   const [isChatting, setIsChatting] = useState(false);
+  const [isChatOpen, setIsChatOpen] = useState(false);
   const [chat, setChat] = useState<ChatMessage[]>([
     { role: 'lumi', content: language === 'en'
       ? 'You can ask Lumi about priority student groups, review plans, or how to organize 1:1 meetings.'
@@ -569,28 +572,50 @@ export function Dashboard({ workspaceIdOverride, teacherNameOverride, teacherEma
           ) : null}
         </section>
 
-        <section className="chat-panel">
-          <div>
-            <h2>{language === 'en' ? 'Chat with Lumi' : 'Chat với Lumi'}</h2>
-            <p>{language === 'en' ? 'Ask about support plans, student groups, or teaching approaches based on current data.' : 'Hỏi thêm về kế hoạch hỗ trợ, nhóm học sinh hoặc cách dạy phù hợp với dữ liệu hiện tại.'}</p>
-          </div>
-          <ScrollArea className="chat-log">
-            <div className="chat-stack">
-              {chat.map((message, index) => (
-                <p className={message.role} key={`${message.role}-${index}`}>{message.content}</p>
-              ))}
-              {isChatting ? <p className="lumi">{language === 'en' ? 'Lumi is thinking...' : 'Lumi đang suy nghĩ...'}</p> : null}
-            </div>
-          </ScrollArea>
-          <div className="chat-input">
-            <Input value={question} onChange={(event) => setQuestion(event.target.value)} onKeyDown={(event) => event.key === 'Enter' && void askLumi()} placeholder={language === 'en' ? 'Example: Which students should I meet first this week?' : 'Ví dụ: Tuần này nên gặp học sinh nào trước?'} />
-            <Button onClick={() => void askLumi()}>
-              <Send />
-              {language === 'en' ? 'Send' : 'Gửi'}
-            </Button>
-          </div>
-        </section>
       </section>
+
+      <div className="chat-widget-shell">
+        {isChatOpen ? (
+          <Card className="chat-widget">
+            <div className="chat-widget-header">
+              <div>
+                <h3>{language === 'en' ? 'Chat with Lumi' : 'Chat với Lumi'}</h3>
+                <p>{language === 'en' ? 'Ask for support plans and teaching suggestions.' : 'Hỏi thêm về kế hoạch hỗ trợ và gợi ý giảng dạy.'}</p>
+              </div>
+              <Button variant="ghost" size="sm" className="chat-widget-close" onClick={() => setIsChatOpen(false)}>
+                <X aria-hidden="true" />
+              </Button>
+            </div>
+
+            <ScrollArea className="chat-widget-log">
+              <div className="chat-stack">
+                {chat.map((message, index) => (
+                  <p className={message.role} key={`${message.role}-${index}`}>{message.content}</p>
+                ))}
+                {isChatting ? <p className="lumi">{language === 'en' ? 'Lumi is thinking...' : 'Lumi đang suy nghĩ...'}</p> : null}
+              </div>
+            </ScrollArea>
+
+            <div className="chat-widget-input">
+              <Input
+                value={question}
+                onChange={(event) => setQuestion(event.target.value)}
+                onKeyDown={(event) => event.key === 'Enter' && void askLumi()}
+                placeholder={language === 'en' ? 'Ask Lumi...' : 'Hỏi Lumi...'}
+              />
+              <Button onClick={() => void askLumi()}>
+                <Send />
+                {language === 'en' ? 'Send' : 'Gửi'}
+              </Button>
+            </div>
+          </Card>
+        ) : null}
+
+        <Button className="chat-widget-toggle" onClick={() => setIsChatOpen((open) => !open)}>
+          <MessageCircle aria-hidden="true" />
+          {language === 'en' ? 'Chat with Lumi' : 'Chat với Lumi'}
+        </Button>
+      </div>
 
       {analyzePopup.open ? (
         <div className="analyze-popup-backdrop" role="dialog" aria-modal="true" aria-labelledby="analyze-popup-title">

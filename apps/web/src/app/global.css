@@ -906,6 +906,72 @@ button {
   gap: 10px;
 }
 
+.chat-widget-shell {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  z-index: 80;
+  display: grid;
+  gap: 10px;
+  justify-items: end;
+}
+
+.chat-widget {
+  width: min(420px, calc(100vw - 28px));
+  border: 1px solid #dfe4f5;
+  box-shadow: 0 24px 48px rgba(23, 33, 71, 0.2);
+}
+
+.chat-widget-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 14px 10px;
+  border-bottom: 1px solid var(--vt-line);
+}
+
+.chat-widget-header h3 {
+  margin: 0;
+  font-size: 16px;
+}
+
+.chat-widget-header p {
+  margin: 4px 0 0;
+  color: var(--vt-muted);
+  font-size: 12px;
+}
+
+.chat-widget-close {
+  min-width: 32px;
+  height: 32px;
+  padding: 0;
+}
+
+.chat-widget-log {
+  height: 260px;
+  max-height: 260px;
+  padding: 12px;
+}
+
+.chat-widget-input {
+  display: flex;
+  gap: 8px;
+  padding: 0 12px 12px;
+}
+
+.chat-widget-input input {
+  flex: 1;
+  min-height: 40px;
+}
+
+.chat-widget-toggle {
+  min-height: 46px;
+  border-radius: 999px;
+  padding: 0 16px;
+  box-shadow: 0 14px 26px rgba(79, 70, 229, 0.35);
+}
+
 .chat-input input {
   flex: 1;
   min-height: 44px;
@@ -1202,6 +1268,15 @@ button {
 
   .chat-input {
     grid-column: auto;
+  }
+
+  .chat-widget-shell {
+    right: 12px;
+    bottom: 12px;
+  }
+
+  .chat-widget {
+    width: min(420px, calc(100vw - 16px));
   }
 }
 
