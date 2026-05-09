@@ -38,6 +38,13 @@ type ChatMessage = {
   content: string;
 };
 
+type AnalyzePopupState = {
+  open: boolean;
+  status: 'analyzing' | 'success' | 'error';
+  title: string;
+  detail: string;
+};
+
 type DashboardProps = {
   workspaceIdOverride?: string;
   teacherNameOverride?: string;
@@ -74,6 +81,12 @@ export function Dashboard({ workspaceIdOverride, teacherNameOverride, teacherEma
   const [selectedId, setSelectedId] = useState(initialAnalysis.students[0]?.student.id);
   const [error, setError] = useState('');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [analyzePopup, setAnalyzePopup] = useState<AnalyzePopupState>({
+    open: false,
+    status: 'analyzing',
+    title: '',
+    detail: ''
+  });
   const [question, setQuestion] = useState('');
   const [isChatting, setIsChatting] = useState(false);
   const [chat, setChat] = useState<ChatMessage[]>([
@@ -109,9 +122,19 @@ export function Dashboard({ workspaceIdOverride, teacherNameOverride, teacherEma
     });
   }, [analysis, language]);
 
-  async function runAnalysis(nextCsv = csv) {
+  async function runAnalysis(nextCsv = csv, showPopup = true) {
     setError('');
     setIsAnalyzing(true);
+    if (showPopup) {
+      setAnalyzePopup({
+        open: true,
+        status: 'analyzing',
+        title: language === 'en' ? 'Analyzing your class data' : 'Đang phân tích dữ liệu lớp',
+        detail: language === 'en'
+          ? 'Lumi is reading scores, grouping risks, and building teaching actions...'
+          : 'Lumi đang đọc dữ liệu, phân nhóm rủi ro và tạo gợi ý giảng dạy...'
+      });
+    }
     try {
       const local = analyzeClass(parseCsv(nextCsv));
       setAnalysis(local);
@@ -128,8 +151,27 @@ export function Dashboard({ workspaceIdOverride, teacherNameOverride, teacherEma
       setAnalysis(data.analysis);
       setLumi(data.lumi);
       setSelectedId(data.analysis.students[0]?.student.id);
+      if (showPopup) {
+        setAnalyzePopup({
+          open: true,
+          status: 'success',
+          title: language === 'en' ? 'Analysis completed successfully' : 'Phân tích đã hoàn tất',
+          detail: language === 'en'
+            ? `Dashboard updated for ${data.analysis.className}.`
+            : `Dashboard đã cập nhật cho lớp ${data.analysis.className}.`
+        });
+      }
     } catch (err) {
-      setError(err instanceof Error ? err.message : (language === 'en' ? 'Unable to read CSV data.' : 'Không thể đọc dữ liệu CSV.'));
+      const message = err instanceof Error ? err.message : (language === 'en' ? 'Unable to read CSV data.' : 'Không thể đọc dữ liệu CSV.');
+      setError(message);
+      if (showPopup) {
+        setAnalyzePopup({
+          open: true,
+          status: 'error',
+          title: language === 'en' ? 'Analysis failed' : 'Phân tích thất bại',
+          detail: message
+        });
+      }
     } finally {
       setIsAnalyzing(false);
     }
@@ -138,7 +180,15 @@ export function Dashboard({ workspaceIdOverride, teacherNameOverride, teacherEma
   async function handleUpload(file: File) {
     const text = await file.text();
     setCsv(text);
-    await runAnalysis(text);
+    await runAnalysis(text, true);
+  }
+
+  function closeAnalyzePopup() {
+    setAnalyzePopup((current) => ({ ...current, open: false }));
+  }
+
+  function refreshDashboard() {
+    if (typeof window !== 'undefined') window.location.reload();
   }
 
   async function askLumi() {
@@ -373,6 +423,63 @@ export function Dashboard({ workspaceIdOverride, teacherNameOverride, teacherEma
           </div>
         </section>
       </section>
+
+      {analyzePopup.open ? (
+        <div className="analyze-popup-backdrop" role="dialog" aria-modal="true" aria-labelledby="analyze-popup-title">
+          <Card className="analyze-popup-card">
+            <CardHeader>
+              <CardTitle id="analyze-popup-title">{analyzePopup.title}</CardTitle>
+              <CardDescription>{analyzePopup.detail}</CardDescription>
+            </CardHeader>
+            <CardContent className="analyze-popup-content">
+              {analyzePopup.status === 'analyzing' ? (
+                <div className="analyze-animation" aria-hidden="true">
+                  <div className="analyze-orb" />
+                  <div className="analyze-rings">
+                    <span />
+                    <span />
+                    <span />
+                  </div>
+                  <div className="analyze-bars">
+                    <i />
+                    <i />
+                    <i />
+                    <i />
+                    <i />
+                  </div>
+                </div>
+              ) : null}
+
+              {analyzePopup.status === 'success' ? (
+                <div className="analyze-result success">
+                  <CheckCircle2 aria-hidden="true" />
+                  <p>{language === 'en' ? 'Everything is ready. Your dashboard is now refreshed with the latest analysis.' : 'Mọi thứ đã sẵn sàng. Dashboard đã được cập nhật với kết quả mới nhất.'}</p>
+                </div>
+              ) : null}
+
+              {analyzePopup.status === 'error' ? (
+                <div className="analyze-result error">
+                  <AlertCircle aria-hidden="true" />
+                  <p>{language === 'en' ? 'Please review the CSV format and try again.' : 'Vui lòng kiểm tra định dạng CSV và thử lại.'}</p>
+                </div>
+              ) : null}
+
+              <div className="analyze-popup-actions">
+                {analyzePopup.status === 'analyzing' ? null : (
+                  <>
+                    <Button variant="outline" onClick={closeAnalyzePopup}>
+                      {language === 'en' ? 'Close' : 'Đóng'}
+                    </Button>
+                    <Button onClick={refreshDashboard}>
+                      {language === 'en' ? 'Refresh dashboard' : 'Làm mới dashboard'}
+                    </Button>
+                  </>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      ) : null}
     </main>
   );
 }
