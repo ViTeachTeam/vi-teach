@@ -1,8 +1,9 @@
 import { NextResponse } from 'next/server';
 import { generateLumiChat } from '../../../src/lib/lumi';
 import { checkRateLimit, getRateLimitHeaders } from '../../../src/lib/rateLimit';
-import { readJsonBody, validateAnalysisContext, validateQuestion, validateWorkspaceId } from '../../../src/lib/requestValidation';
+import { readJsonBody, validateAnalysisContext, validateLanguage, validateQuestion, validateWorkspaceId } from '../../../src/lib/requestValidation';
 import { persistApiAudit, persistChat } from '../../../src/lib/supabaseRest';
+import type { Language } from '../../../src/types/score';
 
 const MAX_QUESTION_LENGTH = 500;
 const MAX_ANALYSIS_BYTES = 200_000;
@@ -16,14 +17,31 @@ export async function POST(request: Request) {
   const requestId = crypto.randomUUID();
   const ipAddress = getClientIp(request);
   const userAgent = request.headers.get('user-agent') || undefined;
+  let language: Language = 'vi';
   let workspaceForAudit = 'demo';
   try {
     const body = await readJsonBody(request);
+    const nextLanguage = validateLanguage(body.language);
+    if (!nextLanguage) {
+      return createResponse({
+        status: 400,
+        body: { error: 'Invalid language. Use vi or en.' },
+        requestId,
+        workspaceId: workspaceForAudit,
+        startedAt,
+        endpoint: ENDPOINT,
+        ipAddress,
+        userAgent,
+        errorMessage: 'invalid_language'
+      });
+    }
+    language = nextLanguage;
+
     const workspaceId = validateWorkspaceId(body.workspaceId, MAX_WORKSPACE_ID_LENGTH);
     if (workspaceId === null) {
       return createResponse({
         status: 400,
-        body: { error: 'Workspace ID không hợp lệ.' },
+        body: { error: language === 'en' ? 'Invalid workspace ID.' : 'Workspace ID không hợp lệ.' },
         requestId,
         workspaceId: workspaceForAudit,
         startedAt,
@@ -43,7 +61,7 @@ export async function POST(request: Request) {
     if (!rate.allowed) {
       return createResponse({
         status: 429,
-        body: { error: 'Yêu cầu quá nhiều. Vui lòng thử lại sau ít giây.' },
+        body: { error: language === 'en' ? 'Too many requests. Please try again shortly.' : 'Yêu cầu quá nhiều. Vui lòng thử lại sau ít giây.' },
         requestId,
         workspaceId: workspaceForAudit,
         startedAt,
@@ -62,7 +80,7 @@ export async function POST(request: Request) {
     if (!question || !analysis) {
       return createResponse({
         status: 400,
-        body: { error: 'Thiếu câu hỏi hoặc bối cảnh lớp học.' },
+        body: { error: language === 'en' ? 'Missing question or class context.' : 'Thiếu câu hỏi hoặc bối cảnh lớp học.' },
         requestId,
         workspaceId: workspaceForAudit,
         startedAt,
@@ -74,7 +92,7 @@ export async function POST(request: Request) {
       });
     }
 
-    const answer = await generateLumiChat(question, analysis);
+    const answer = await generateLumiChat(question, analysis, language);
     await persistChat(analysis.className, question, answer, workspaceForAudit);
 
     return createResponse({
@@ -91,7 +109,7 @@ export async function POST(request: Request) {
   } catch (error) {
     return createResponse({
       status: 500,
-      body: { error: 'Lumi chưa thể phản hồi lúc này.' },
+      body: { error: language === 'en' ? 'Lumi is unavailable right now.' : 'Lumi chưa thể phản hồi lúc này.' },
       requestId,
       workspaceId: workspaceForAudit,
       startedAt,

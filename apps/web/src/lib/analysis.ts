@@ -1,4 +1,4 @@
-import type { ClassAnalysis, RiskLevel, StudentAnalysis, StudentScore } from '../types/score';
+import type { ClassAnalysis, Language, RiskLevel, StudentAnalysis, StudentScore } from '../types/score';
 
 const scoreFields: { key: keyof StudentScore; label: string; phase: number }[] = [
   { key: 'oralScore', label: 'Miệng', phase: 1 },
@@ -81,7 +81,10 @@ export function analyzeStudent(student: StudentScore): StudentAnalysis {
   };
 }
 
-export function riskLabel(level: RiskLevel) {
+export function riskLabel(level: RiskLevel, language: Language = 'vi') {
+  if (language === 'en') {
+    return level === 'high' ? 'High Risk' : level === 'medium' ? 'Medium Risk' : 'Low Risk';
+  }
   return level === 'high' ? 'Nguy cơ cao' : level === 'medium' ? 'Nguy cơ trung bình' : 'Nguy cơ thấp';
 }
 

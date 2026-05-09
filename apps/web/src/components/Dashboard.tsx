@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import {
   AlertCircle,
@@ -31,7 +31,7 @@ import { analyzeClass, riskLabel } from '../lib/analysis';
 import { parseCsv } from '../lib/csv';
 import { fallbackLumiAnalysis } from '../lib/lumi';
 import { sampleCsv } from '../data/sampleCsv';
-import type { ClassAnalysis, LumiAnalysis, RiskLevel, StudentAnalysis } from '../types/score';
+import type { ClassAnalysis, Language, LumiAnalysis, RiskLevel, StudentAnalysis } from '../types/score';
 
 type ChatMessage = {
   role: 'teacher' | 'lumi';
@@ -42,6 +42,11 @@ const initialAnalysis = analyzeClass(parseCsv(sampleCsv));
 const initialLumi = fallbackLumiAnalysis(initialAnalysis);
 
 export function Dashboard() {
+  const [language, setLanguage] = useState<Language>(() => {
+    if (typeof window === 'undefined') return 'vi';
+    const existing = window.localStorage.getItem('viteach_lang');
+    return existing === 'en' ? 'en' : 'vi';
+  });
   const [workspaceId] = useState(() => {
     if (typeof window === 'undefined') return 'demo';
     const storageKey = 'viteach_workspace_id';
@@ -60,7 +65,9 @@ export function Dashboard() {
   const [question, setQuestion] = useState('');
   const [isChatting, setIsChatting] = useState(false);
   const [chat, setChat] = useState<ChatMessage[]>([
-    { role: 'lumi', content: 'Cô có thể hỏi Lumi về nhóm học sinh cần chú ý, kế hoạch ôn tập hoặc cách tổ chức gặp 1:1.' }
+    { role: 'lumi', content: language === 'en'
+      ? 'You can ask Lumi about priority student groups, review plans, or how to organize 1:1 meetings.'
+      : 'Cô có thể hỏi Lumi về nhóm học sinh cần chú ý, kế hoạch ôn tập hoặc cách tổ chức gặp 1:1.' }
   ]);
   const fileInput = useRef<HTMLInputElement>(null);
 
@@ -69,6 +76,26 @@ export function Dashboard() {
     [analysis, selectedId]
   );
 
+  useEffect(() => {
+    setLumi((current) => {
+      if (current === initialLumi) {
+        return fallbackLumiAnalysis(analysis, language);
+      }
+      return current;
+    });
+    setChat((messages) => {
+      if (messages.length !== 1 || messages[0]?.role !== 'lumi') return messages;
+      return [
+        {
+          role: 'lumi',
+          content: language === 'en'
+            ? 'You can ask Lumi about priority student groups, review plans, or how to organize 1:1 meetings.'
+            : 'Cô có thể hỏi Lumi về nhóm học sinh cần chú ý, kế hoạch ôn tập hoặc cách tổ chức gặp 1:1.'
+        }
+      ];
+    });
+  }, [analysis, language]);
+
   async function runAnalysis(nextCsv = csv) {
     setError('');
     setIsAnalyzing(true);
@@ -76,20 +103,20 @@ export function Dashboard() {
       const local = analyzeClass(parseCsv(nextCsv));
       setAnalysis(local);
       setSelectedId(local.students[0]?.student.id);
-      setLumi(fallbackLumiAnalysis(local));
+      setLumi(fallbackLumiAnalysis(local, language));
 
       const response = await fetch('/api/analyze', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ csv: nextCsv, className: local.className, workspaceId })
+        body: JSON.stringify({ csv: nextCsv, className: local.className, workspaceId, language })
       });
       const data = await response.json();
-      if (!response.ok) throw new Error(data.error || 'Không thể phân tích dữ liệu.');
+      if (!response.ok) throw new Error(data.error || (language === 'en' ? 'Unable to analyze data.' : 'Không thể phân tích dữ liệu.'));
       setAnalysis(data.analysis);
       setLumi(data.lumi);
       setSelectedId(data.analysis.students[0]?.student.id);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Không thể đọc dữ liệu CSV.');
+      setError(err instanceof Error ? err.message : (language === 'en' ? 'Unable to read CSV data.' : 'Không thể đọc dữ liệu CSV.'));
     } finally {
       setIsAnalyzing(false);
     }
@@ -111,7 +138,7 @@ export function Dashboard() {
       const response = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ question: nextQuestion, analysis, workspaceId })
+        body: JSON.stringify({ question: nextQuestion, analysis, workspaceId, language })
       });
       const data = await response.json();
       setChat((messages) => [...messages, { role: 'lumi', content: data.answer || data.error }]);
@@ -127,11 +154,14 @@ export function Dashboard() {
           <div className="brand-mark">V</div>
           <div className="brand-copy">
             <strong>ViTeach</strong>
-            <span className="brand-slogan">Hiểu học sinh - Dạy đúng cách</span>
+            <span className="brand-slogan">{language === 'en' ? 'Understand Students - Teach Smarter' : 'Hiểu học sinh - Dạy đúng cách'}</span>
           </div>
         </div>
         <nav className="nav">
-          {['Tổng quan lớp', 'Học sinh', 'AI Phân tích', 'Kế hoạch giảng dạy', 'Nhập dữ liệu', 'Báo cáo', 'Cài đặt'].map((item, index) => (
+          {(language === 'en'
+            ? ['Class Overview', 'Students', 'AI Analysis', 'Teaching Plan', 'Import Data', 'Reports', 'Settings']
+            : ['Tổng quan lớp', 'Học sinh', 'AI Phân tích', 'Kế hoạch giảng dạy', 'Nhập dữ liệu', 'Báo cáo', 'Cài đặt'])
+            .map((item, index) => (
             <Button className={index === 0 ? 'active' : ''} key={item} variant="ghost">
               {navIcon(index)}
               {item}
@@ -144,26 +174,36 @@ export function Dashboard() {
             <AvatarFallback>{initials(analysis.teacherName)}</AvatarFallback>
           </Avatar>
           <div>
-            <strong>{analysis.teacherName || 'Giáo viên'}</strong>
-            <span>{`Giáo viên ${analysis.subject || 'chưa cung cấp môn'}`}</span>
+            <strong>{analysis.teacherName || (language === 'en' ? 'Teacher' : 'Giáo viên')}</strong>
+            <span>{language === 'en' ? `Teacher · ${analysis.subject || 'No subject provided'}` : `Giáo viên ${analysis.subject || 'chưa cung cấp môn'}`}</span>
           </div>
         </Card>
         <Card className="class-card">
-          <span>Lớp hiện tại</span>
+          <span>{language === 'en' ? 'Current Class' : 'Lớp hiện tại'}</span>
           <strong>{analysis.className}</strong>
-          <p>Môn: {analysis.subject || 'Chưa cung cấp'}</p>
-          <p>Sĩ số: {analysis.totalStudents} học sinh</p>
-          <Button variant="outline">Đổi lớp <span>→</span></Button>
+          <p>{language === 'en' ? `Subject: ${analysis.subject || 'Not provided'}` : `Môn: ${analysis.subject || 'Chưa cung cấp'}`}</p>
+          <p>{language === 'en' ? `Class size: ${analysis.totalStudents} students` : `Sĩ số: ${analysis.totalStudents} học sinh`}</p>
+          <Button variant="outline">{language === 'en' ? 'Switch Class' : 'Đổi lớp'} <span>→</span></Button>
         </Card>
       </aside>
 
       <section className="content">
         <header className="topbar">
           <div>
-            <h1>{`Xin chào ${analysis.teacherName || 'giáo viên'}`}</h1>
-            <p>Theo dõi lớp {analysis.className}, phát hiện học sinh cần hỗ trợ và nhận gợi ý giảng dạy từ Lumi.</p>
+            <h1>{language === 'en' ? `Hello ${analysis.teacherName || 'Teacher'}` : `Xin chào ${analysis.teacherName || 'giáo viên'}`}</h1>
+            <p>{language === 'en'
+              ? `Track class ${analysis.className}, detect students needing support, and get teaching suggestions from Lumi.`
+              : `Theo dõi lớp ${analysis.className}, phát hiện học sinh cần hỗ trợ và nhận gợi ý giảng dạy từ Lumi.`}</p>
           </div>
           <div className="actions">
+            <div className="lang-toggle" role="group" aria-label="language-toggle">
+              <Button variant={language === 'vi' ? 'default' : 'outline'} onClick={() => { setLanguage('vi'); if (typeof window !== 'undefined') window.localStorage.setItem('viteach_lang', 'vi'); }}>
+                VI
+              </Button>
+              <Button variant={language === 'en' ? 'default' : 'outline'} onClick={() => { setLanguage('en'); if (typeof window !== 'undefined') window.localStorage.setItem('viteach_lang', 'en'); }}>
+                EN
+              </Button>
+            </div>
             <input
               ref={fileInput}
               accept=".csv,text/csv"
@@ -176,11 +216,11 @@ export function Dashboard() {
             />
             <Button variant="outline" onClick={() => fileInput.current?.click()}>
               <Upload />
-              Nhập dữ liệu
+              {language === 'en' ? 'Upload Data' : 'Nhập dữ liệu'}
             </Button>
             <Button onClick={() => void runAnalysis()} disabled={isAnalyzing}>
               <Sparkles />
-              {isAnalyzing ? 'Đang phân tích...' : 'Phân tích với Lumi'}
+              {isAnalyzing ? (language === 'en' ? 'Analyzing...' : 'Đang phân tích...') : (language === 'en' ? 'Analyze with Lumi' : 'Phân tích với Lumi')}
             </Button>
           </div>
         </header>
@@ -188,49 +228,49 @@ export function Dashboard() {
         {error ? (
           <Alert variant="destructive" className="error">
             <AlertCircle />
-            <AlertTitle>Không thể phân tích dữ liệu</AlertTitle>
+            <AlertTitle>{language === 'en' ? 'Unable to analyze data' : 'Không thể phân tích dữ liệu'}</AlertTitle>
             <AlertDescription>{error}</AlertDescription>
           </Alert>
         ) : null}
 
         <section className="kpi-grid">
-          <Kpi title="Tổng học sinh" value={analysis.totalStudents} note="đã phân tích" accent="violet" icon={<Users />} />
-          <Kpi title="Học sinh cần chú ý" value={analysis.attentionCount} note="tỷ lệ trên sĩ số lớp" delta={`${percent(analysis.attentionCount, analysis.totalStudents)}%`} accent="amber" icon={<BellIcon />} />
-          <Kpi title="Nguy cơ cao" value={analysis.riskCounts.high} note="cần hỗ trợ sớm" accent="red" icon={<AlertCircle />} />
-          <Kpi title="Nguy cơ trung bình" value={analysis.riskCounts.medium} note="cần theo dõi" accent="amber" icon={<BarChart3 />} />
-          <Kpi title="Nguy cơ thấp" value={analysis.riskCounts.low} note="đang tiến bộ" accent="green" icon={<CheckCircle2 />} />
+          <Kpi title={language === 'en' ? 'Total Students' : 'Tổng học sinh'} value={analysis.totalStudents} note={language === 'en' ? 'analyzed' : 'đã phân tích'} accent="violet" icon={<Users />} />
+          <Kpi title={language === 'en' ? 'Students Needing Support' : 'Học sinh cần chú ý'} value={analysis.attentionCount} note={language === 'en' ? 'share of class size' : 'tỷ lệ trên sĩ số lớp'} delta={`${percent(analysis.attentionCount, analysis.totalStudents)}%`} accent="amber" icon={<BellIcon />} />
+          <Kpi title={language === 'en' ? 'High Risk' : 'Nguy cơ cao'} value={analysis.riskCounts.high} note={language === 'en' ? 'early support needed' : 'cần hỗ trợ sớm'} accent="red" icon={<AlertCircle />} />
+          <Kpi title={language === 'en' ? 'Medium Risk' : 'Nguy cơ trung bình'} value={analysis.riskCounts.medium} note={language === 'en' ? 'monitor closely' : 'cần theo dõi'} accent="amber" icon={<BarChart3 />} />
+          <Kpi title={language === 'en' ? 'Low Risk' : 'Nguy cơ thấp'} value={analysis.riskCounts.low} note={language === 'en' ? 'stable progress' : 'đang tiến bộ'} accent="green" icon={<CheckCircle2 />} />
         </section>
 
         <section className="dashboard-grid">
-          <Panel title="Phân bố mức độ rủi ro" className="risk-panel">
-            <Donut analysis={analysis} />
+          <Panel title={language === 'en' ? 'Risk Distribution' : 'Phân bố mức độ rủi ro'} className="risk-panel" language={language}>
+            <Donut analysis={analysis} language={language} />
           </Panel>
-          <Panel title="Vấn đề nổi bật của lớp">
+          <Panel title={language === 'en' ? 'Top Class Issues' : 'Vấn đề nổi bật của lớp'} language={language}>
             <div className="issue-list">
               {analysis.issues.map((issue) => (
                 <div className="issue-row" key={issue.label}>
-                  <span>{issue.label}</span>
+                  <span>{translateDynamicText(issue.label, language)}</span>
                   <div><i style={{ width: `${Math.max(issue.percent, 8)}%` }} /></div>
-                  <strong>{issue.count} học sinh</strong>
+                  <strong>{language === 'en' ? `${issue.count} students` : `${issue.count} học sinh`}</strong>
                 </div>
               ))}
             </div>
           </Panel>
-          <Panel title="Gợi ý hành động từ Lumi">
+          <Panel title={language === 'en' ? 'Action Suggestions from Lumi' : 'Gợi ý hành động từ Lumi'} language={language}>
             <div className="suggestions">
               {lumi.teachingSuggestions.slice(0, 3).map((item) => <p key={item}>{item}</p>)}
             </div>
-            <Button className="link-button" variant="link">Xem kế hoạch chi tiết →</Button>
+            <Button className="link-button" variant="link">{language === 'en' ? 'View detailed plan →' : 'Xem kế hoạch chi tiết →'}</Button>
           </Panel>
         </section>
 
         <section className="lower-grid">
-          <Panel title="Học sinh cần chú ý" className="student-list-panel">
+          <Panel title={language === 'en' ? 'Students Requiring Attention' : 'Học sinh cần chú ý'} className="student-list-panel" language={language}>
             <div className="table-head">
-              <span>Học sinh</span>
-              <span>Mức độ rủi ro</span>
-              <span>Xu hướng</span>
-              <span>Vấn đề chính</span>
+              <span>{language === 'en' ? 'Student' : 'Học sinh'}</span>
+              <span>{language === 'en' ? 'Risk Level' : 'Mức độ rủi ro'}</span>
+              <span>{language === 'en' ? 'Trend' : 'Xu hướng'}</span>
+              <span>{language === 'en' ? 'Main Issue' : 'Vấn đề chính'}</span>
             </div>
             {analysis.students.slice(0, 6).map((student) => (
               <button
@@ -238,32 +278,32 @@ export function Dashboard() {
                 key={student.student.id}
                 onClick={() => setSelectedId(student.student.id)}
               >
-                <span><b>{student.student.name}</b><small>SBD: {student.student.id}</small></span>
-                <RiskPill level={student.riskLevel} />
+                <span><b>{student.student.name}</b><small>{language === 'en' ? 'ID' : 'SBD'}: {student.student.id}</small></span>
+                <RiskPill level={student.riskLevel} language={language} />
                 <Sparkline student={student} />
-                <span>{student.issue}</span>
+                <span>{translateDynamicText(student.issue, language)}</span>
               </button>
             ))}
           </Panel>
 
           {selected ? (
-            <Panel className="student-detail" title={`${selected.student.name} · ${riskLabel(selected.riskLevel)}`}>
-              <div className="student-meta">SBD: {selected.student.id} | {selected.student.gender || 'N/A'} | {analysis.className}</div>
+            <Panel className="student-detail" title={`${selected.student.name} · ${riskLabel(selected.riskLevel, language)}`} language={language}>
+              <div className="student-meta">{language === 'en' ? 'ID' : 'SBD'}: {selected.student.id} | {selected.student.gender || 'N/A'} | {analysis.className}</div>
               <Tabs defaultValue="overview" className="tabs-shell">
                 <TabsList className="tabs">
-                  <TabsTrigger value="overview">Tổng quan</TabsTrigger>
-                  <TabsTrigger value="scores">Điểm số</TabsTrigger>
-                  <TabsTrigger value="notes">Ghi chú</TabsTrigger>
+                  <TabsTrigger value="overview">{language === 'en' ? 'Overview' : 'Tổng quan'}</TabsTrigger>
+                  <TabsTrigger value="scores">{language === 'en' ? 'Scores' : 'Điểm số'}</TabsTrigger>
+                  <TabsTrigger value="notes">{language === 'en' ? 'Notes' : 'Ghi chú'}</TabsTrigger>
                   <TabsTrigger value="insight">AI Insight</TabsTrigger>
                 </TabsList>
               </Tabs>
               <div className="detail-grid">
-                <TrendChart student={selected} />
+                <TrendChart student={selected} language={language} />
                 <div className="insight-box">
                   <strong>Lumi Insight</strong>
-                  <h4>Lý do rủi ro</h4>
-                  <ul>{selected.weakCategories.slice(0, 4).map((item) => <li key={item}>{item}</li>)}</ul>
-                  <h4>Lumi gợi ý</h4>
+                  <h4>{language === 'en' ? 'Risk Reasons' : 'Lý do rủi ro'}</h4>
+                  <ul>{selected.weakCategories.slice(0, 4).map((item) => <li key={item}>{translateDynamicText(item, language)}</li>)}</ul>
+                  <h4>{language === 'en' ? 'Lumi Suggestions' : 'Lumi gợi ý'}</h4>
                   <ul>{lumi.meetingSuggestions.slice(0, 3).map((item) => <li key={item}>{item}</li>)}</ul>
                 </div>
               </div>
@@ -273,22 +313,22 @@ export function Dashboard() {
 
         <section className="chat-panel">
           <div>
-            <h2>Chat với Lumi</h2>
-            <p>Hỏi thêm về kế hoạch hỗ trợ, nhóm học sinh hoặc cách dạy phù hợp với dữ liệu hiện tại.</p>
+            <h2>{language === 'en' ? 'Chat with Lumi' : 'Chat với Lumi'}</h2>
+            <p>{language === 'en' ? 'Ask about support plans, student groups, or teaching approaches based on current data.' : 'Hỏi thêm về kế hoạch hỗ trợ, nhóm học sinh hoặc cách dạy phù hợp với dữ liệu hiện tại.'}</p>
           </div>
           <ScrollArea className="chat-log">
             <div className="chat-stack">
               {chat.map((message, index) => (
                 <p className={message.role} key={`${message.role}-${index}`}>{message.content}</p>
               ))}
-              {isChatting ? <p className="lumi">Lumi đang suy nghĩ...</p> : null}
+              {isChatting ? <p className="lumi">{language === 'en' ? 'Lumi is thinking...' : 'Lumi đang suy nghĩ...'}</p> : null}
             </div>
           </ScrollArea>
           <div className="chat-input">
-            <Input value={question} onChange={(event) => setQuestion(event.target.value)} onKeyDown={(event) => event.key === 'Enter' && void askLumi()} placeholder="Ví dụ: Tuần này nên gặp học sinh nào trước?" />
+            <Input value={question} onChange={(event) => setQuestion(event.target.value)} onKeyDown={(event) => event.key === 'Enter' && void askLumi()} placeholder={language === 'en' ? 'Example: Which students should I meet first this week?' : 'Ví dụ: Tuần này nên gặp học sinh nào trước?'} />
             <Button onClick={() => void askLumi()}>
               <Send />
-              Gửi
+              {language === 'en' ? 'Send' : 'Gửi'}
             </Button>
           </div>
         </section>
@@ -309,12 +349,16 @@ function Kpi({ title, value, note, delta, accent, icon }: { title: string; value
   );
 }
 
-function Panel({ title, className = '', children }: { title: string; className?: string; children: ReactNode }) {
+function Panel({ title, className = '', children, language = 'vi' }: { title: string; className?: string; children: ReactNode; language?: Language }) {
   return (
     <Card className={`panel ${className}`}>
       <CardHeader className="panel-header">
         <CardTitle>{title}</CardTitle>
-        <CardDescription>{title.includes('Lumi') ? 'Đề xuất dựa trên dữ liệu hiện tại' : 'Cập nhật sau lần phân tích mới nhất'}</CardDescription>
+        <CardDescription>
+          {title.includes('Lumi') || title.includes('AI')
+            ? (language === 'en' ? 'Suggestions based on current data' : 'Đề xuất dựa trên dữ liệu hiện tại')
+            : (language === 'en' ? 'Updated after the latest analysis' : 'Cập nhật sau lần phân tích mới nhất')}
+        </CardDescription>
       </CardHeader>
       <CardContent className="panel-content">
         {children}
@@ -323,40 +367,40 @@ function Panel({ title, className = '', children }: { title: string; className?:
   );
 }
 
-function Donut({ analysis }: { analysis: ClassAnalysis }) {
+function Donut({ analysis, language }: { analysis: ClassAnalysis; language: Language }) {
   const high = percent(analysis.riskCounts.high, analysis.totalStudents);
   const medium = percent(analysis.riskCounts.medium, analysis.totalStudents);
   return (
     <div className="donut-wrap">
       <div className="donut" style={{ background: `conic-gradient(#ff4d5f 0 ${high}%, #f59e0b ${high}% ${high + medium}%, #35c987 ${high + medium}% 100%)` }}>
-        <div><strong>{analysis.totalStudents}</strong><span>học sinh</span></div>
+        <div><strong>{analysis.totalStudents}</strong><span>{language === 'en' ? 'students' : 'học sinh'}</span></div>
       </div>
       <div className="legend">
         {analysis.riskDistribution.map((item) => (
-          <p key={item.level}><i style={{ background: item.color }} />{item.label}<strong>{item.value} ({percent(item.value, analysis.totalStudents)}%)</strong></p>
+          <p key={item.level}><i style={{ background: item.color }} />{language === 'en' ? riskLabel(item.level, 'en') : item.label}<strong>{item.value} ({percent(item.value, analysis.totalStudents)}%)</strong></p>
         ))}
       </div>
     </div>
   );
 }
 
-function RiskPill({ level }: { level: RiskLevel }) {
+function RiskPill({ level, language }: { level: RiskLevel; language: Language }) {
   const variant = level === 'high' ? 'danger' : level === 'medium' ? 'warning' : 'success';
-  return <Badge className={`risk-pill ${level}`} variant={variant}>{riskLabel(level)}</Badge>;
+  return <Badge className={`risk-pill ${level}`} variant={variant}>{riskLabel(level, language)}</Badge>;
 }
 
 function Sparkline({ student }: { student: StudentAnalysis }) {
   return <svg className="spark" viewBox="0 0 110 38" aria-hidden="true"><polyline points={points(student, 110, 38)} /></svg>;
 }
 
-function TrendChart({ student }: { student: StudentAnalysis }) {
+function TrendChart({ student, language }: { student: StudentAnalysis; language: Language }) {
   return (
     <div className="trend">
-      <h3>Xu hướng điểm số</h3>
-      <svg viewBox="0 0 360 190" aria-label="Biểu đồ xu hướng điểm số">
+      <h3>{language === 'en' ? 'Score Trend' : 'Xu hướng điểm số'}</h3>
+      <svg viewBox="0 0 360 190" aria-label={language === 'en' ? 'Score trend chart' : 'Biểu đồ xu hướng điểm số'}>
         {[0, 1, 2, 3].map((line) => <line key={line} x1="24" x2="340" y1={32 + line * 40} y2={32 + line * 40} />)}
         <polyline points={points(student, 316, 140, 24, 24)} />
-        {student.trendPoints.map((point, index) => <text key={point.label} x={24 + index * (316 / Math.max(student.trendPoints.length - 1, 1))} y="178">{point.label}</text>)}
+        {student.trendPoints.map((point, index) => <text key={point.label} x={24 + index * (316 / Math.max(student.trendPoints.length - 1, 1))} y="178">{translateDynamicText(point.label, language)}</text>)}
       </svg>
     </div>
   );
@@ -394,4 +438,27 @@ function initials(name?: string) {
     .map((part) => part[0]?.toUpperCase() || '')
     .join('');
   return letters || 'GV';
+}
+
+function translateDynamicText(text: string, language: Language) {
+  if (language === 'vi') return text;
+  const map: Record<string, string> = {
+    'Nguy cơ cao': 'High Risk',
+    'Nguy cơ trung bình': 'Medium Risk',
+    'Nguy cơ thấp': 'Low Risk',
+    'Điểm số giảm dần': 'Declining score trend',
+    'Thiếu bài tập về nhà': 'Missing homework',
+    'Vắng nhiều': 'Frequent absences',
+    'Nền tảng kiến thức yếu': 'Weak knowledge foundation',
+    'Ít tham gia phát biểu': 'Low class participation',
+    'Đang tiến bộ ổn định': 'Stable positive progress',
+    'Miệng': 'Oral',
+    '15p': '15-min',
+    'Thực hành': 'Practice',
+    'Dự án': 'Project',
+    'Giữa kỳ': 'Midterm',
+    'Hiện tại': 'Current',
+    'Hoạt động lớp': 'Class activity'
+  };
+  return map[text] || text;
 }

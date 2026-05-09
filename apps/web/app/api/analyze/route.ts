@@ -3,8 +3,9 @@ import { analyzeClass } from '../../../src/lib/analysis';
 import { parseCsv } from '../../../src/lib/csv';
 import { generateLumiAnalysis } from '../../../src/lib/lumi';
 import { checkRateLimit, getRateLimitHeaders } from '../../../src/lib/rateLimit';
-import { readJsonBody, validateClassName, validateWorkspaceId } from '../../../src/lib/requestValidation';
+import { readJsonBody, validateClassName, validateLanguage, validateWorkspaceId } from '../../../src/lib/requestValidation';
 import { persistAnalysis, persistApiAudit } from '../../../src/lib/supabaseRest';
+import type { Language } from '../../../src/types/score';
 
 const MAX_CSV_BYTES = 1_000_000;
 const MAX_CLASS_NAME_LENGTH = 80;
@@ -18,14 +19,31 @@ export async function POST(request: Request) {
   const requestId = crypto.randomUUID();
   const ipAddress = getClientIp(request);
   const userAgent = request.headers.get('user-agent') || undefined;
+  let language: Language = 'vi';
   let workspaceForAudit = 'demo';
   try {
     const body = await readJsonBody(request);
+    const nextLanguage = validateLanguage(body.language);
+    if (!nextLanguage) {
+      return createResponse({
+        status: 400,
+        body: { error: 'Invalid language. Use vi or en.' },
+        requestId,
+        workspaceId: workspaceForAudit,
+        startedAt,
+        endpoint: ENDPOINT,
+        ipAddress,
+        userAgent,
+        errorMessage: 'invalid_language'
+      });
+    }
+    language = nextLanguage;
+
     const workspaceId = validateWorkspaceId(body.workspaceId, MAX_WORKSPACE_ID_LENGTH);
     if (workspaceId === null) {
       return createResponse({
         status: 400,
-        body: { error: 'Workspace ID không hợp lệ.' },
+        body: { error: language === 'en' ? 'Invalid workspace ID.' : 'Workspace ID không hợp lệ.' },
         requestId,
         workspaceId: workspaceForAudit,
         startedAt,
@@ -45,7 +63,7 @@ export async function POST(request: Request) {
     if (!rate.allowed) {
       return createResponse({
         status: 429,
-        body: { error: 'Yêu cầu quá nhiều. Vui lòng thử lại sau ít giây.' },
+        body: { error: language === 'en' ? 'Too many requests. Please try again shortly.' : 'Yêu cầu quá nhiều. Vui lòng thử lại sau ít giây.' },
         requestId,
         workspaceId: workspaceForAudit,
         startedAt,
@@ -62,7 +80,7 @@ export async function POST(request: Request) {
     if (!csv) {
       return createResponse({
         status: 400,
-        body: { error: 'Thiếu dữ liệu CSV.' },
+        body: { error: language === 'en' ? 'Missing CSV data.' : 'Thiếu dữ liệu CSV.' },
         requestId,
         workspaceId: workspaceForAudit,
         startedAt,
@@ -77,7 +95,7 @@ export async function POST(request: Request) {
     if (Buffer.byteLength(csv, 'utf8') > MAX_CSV_BYTES) {
       return createResponse({
         status: 413,
-        body: { error: 'CSV quá lớn. Vui lòng tải tệp nhỏ hơn 1MB.' },
+        body: { error: language === 'en' ? 'CSV is too large. Please upload a file smaller than 1MB.' : 'CSV quá lớn. Vui lòng tải tệp nhỏ hơn 1MB.' },
         requestId,
         workspaceId: workspaceForAudit,
         startedAt,
@@ -93,7 +111,7 @@ export async function POST(request: Request) {
     if (className === null) {
       return createResponse({
         status: 400,
-        body: { error: 'Tên lớp không hợp lệ.' },
+        body: { error: language === 'en' ? 'Invalid class name.' : 'Tên lớp không hợp lệ.' },
         requestId,
         workspaceId: workspaceForAudit,
         startedAt,
@@ -107,7 +125,7 @@ export async function POST(request: Request) {
 
     const students = parseCsv(csv);
     const analysis = analyzeClass(students, className || '10A1');
-    const lumi = await generateLumiAnalysis(analysis);
+    const lumi = await generateLumiAnalysis(analysis, language);
     await persistAnalysis(analysis, lumi, workspaceForAudit);
 
     return createResponse({
@@ -124,7 +142,7 @@ export async function POST(request: Request) {
   } catch (error) {
     return createResponse({
       status: 400,
-      body: { error: error instanceof Error ? error.message : 'Không thể phân tích dữ liệu.' },
+      body: { error: error instanceof Error ? error.message : language === 'en' ? 'Unable to analyze data.' : 'Không thể phân tích dữ liệu.' },
       requestId,
       workspaceId: workspaceForAudit,
       startedAt,

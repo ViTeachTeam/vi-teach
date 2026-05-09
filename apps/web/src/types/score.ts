@@ -1,4 +1,5 @@
 export type RiskLevel = 'high' | 'medium' | 'low';
+export type Language = 'vi' | 'en';
 
 export type StudentScore = {
   id: string;

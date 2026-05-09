@@ -20,6 +20,12 @@ export function validateWorkspaceId(value: unknown, maxLength = 64) {
   return workspaceId;
 }
 
+export function validateLanguage(value: unknown) {
+  if (value === undefined) return 'vi' as const;
+  if (value === 'vi' || value === 'en') return value;
+  return null;
+}
+
 export function validateClassName(value: unknown, maxLength = 80) {
   if (value === undefined) return '';
   if (typeof value !== 'string') return null;
