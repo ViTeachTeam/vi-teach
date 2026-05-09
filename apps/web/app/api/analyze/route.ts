@@ -3,6 +3,7 @@ import { analyzeClass } from '../../../src/lib/analysis';
 import { parseCsv } from '../../../src/lib/csv';
 import { generateLumiAnalysis } from '../../../src/lib/lumi';
 import { checkRateLimit, getRateLimitHeaders } from '../../../src/lib/rateLimit';
+import { readJsonBody, validateClassName, validateWorkspaceId } from '../../../src/lib/requestValidation';
 import { persistAnalysis, persistApiAudit } from '../../../src/lib/supabaseRest';
 
 const MAX_CSV_BYTES = 1_000_000;
@@ -20,7 +21,7 @@ export async function POST(request: Request) {
   let workspaceForAudit = 'demo';
   try {
     const body = await readJsonBody(request);
-    const workspaceId = validateWorkspaceId(body.workspaceId);
+    const workspaceId = validateWorkspaceId(body.workspaceId, MAX_WORKSPACE_ID_LENGTH);
     if (workspaceId === null) {
       return createResponse({
         status: 400,
@@ -88,7 +89,7 @@ export async function POST(request: Request) {
       });
     }
 
-    const className = validateClassName(body.className);
+    const className = validateClassName(body.className, MAX_CLASS_NAME_LENGTH);
     if (className === null) {
       return createResponse({
         status: 400,
@@ -133,35 +134,6 @@ export async function POST(request: Request) {
       errorMessage: error instanceof Error ? error.message : 'analyze_failed'
     });
   }
-}
-
-async function readJsonBody(request: Request) {
-  try {
-    const body = (await request.json()) as unknown;
-    if (!body || typeof body !== 'object') return {} as Record<string, unknown>;
-    return body as Record<string, unknown>;
-  } catch {
-    return {} as Record<string, unknown>;
-  }
-}
-
-function validateClassName(value: unknown) {
-  if (value === undefined) return '';
-  if (typeof value !== 'string') return null;
-  const className = value.trim();
-  if (!className) return '';
-  if (className.length > MAX_CLASS_NAME_LENGTH) return null;
-  return className;
-}
-
-function validateWorkspaceId(value: unknown) {
-  if (value === undefined) return '';
-  if (typeof value !== 'string') return null;
-  const workspaceId = value.trim();
-  if (!workspaceId) return '';
-  if (workspaceId.length > MAX_WORKSPACE_ID_LENGTH) return null;
-  if (!/^[a-zA-Z0-9_-]+$/.test(workspaceId)) return null;
-  return workspaceId;
 }
 
 async function createResponse(input: {
