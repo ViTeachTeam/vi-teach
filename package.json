@@ -8,7 +8,8 @@
     "lint": "nx lint @vi-teach/web",
     "test": "nx test @vi-teach/web",
     "typecheck": "nx typecheck @vi-teach/web",
-    "seed:demo-teacher": "node scripts/seed-demo-teacher.mjs"
+    "seed:demo-teacher": "node scripts/seed-demo-teacher.mjs",
+    "seed:multiple-teachers": "node scripts/seed-multiple-teachers.mjs"
   },
   "private": true,
   "dependencies": {
