@@ -600,7 +600,7 @@ export function Dashboard({ workspaceIdOverride, teacherNameOverride, teacherEma
                 {chat.map((message, index) => (
                   <p className={message.role} key={`${message.role}-${index}`}>{message.content}</p>
                 ))}
-                {isChatting ? <p className="lumi">{language === 'en' ? 'Lumi is thinking...' : 'Lumi đang suy nghĩ...'}</p> : null}
+                {isChatting ? <p className="lumi">{language === 'en' ? 'ViTeach is thinking...' : 'Trợ lý ViTeach đang suy nghĩ...'}</p> : null}
               </div>
             </ScrollArea>
 
