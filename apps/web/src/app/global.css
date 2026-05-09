@@ -459,6 +459,9 @@ button {
 }
 
 .potential-grid {
+  display: grid;
+  grid-template-columns: 1.1fr 1fr;
+  gap: 16px;
   margin-top: 18px;
 }
 
@@ -726,10 +729,22 @@ button {
   width: 100%;
 }
 
-.detail-grid {
+.detail-stack {
   display: grid;
-  grid-template-columns: 1fr 0.9fr;
-  gap: 18px;
+  gap: 14px;
+}
+
+.chart-card {
+  padding: 14px;
+  border: 1px solid #edf0f8;
+  border-radius: 10px;
+  background: #fff;
+}
+
+.insight-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
 }
 
 .trend h3 {
@@ -792,21 +807,54 @@ button {
 }
 
 .insight-box {
-  padding: 16px;
-  background: #f7f5ff;
-  border-radius: 8px;
+  padding: 14px;
+  background: linear-gradient(180deg, #f8f7ff 0%, #f4f3ff 100%);
+  border: 1px solid #e6e4ff;
+  border-radius: 10px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
 }
 
-.insight-box h4 {
-  margin: 14px 0 6px;
-  color: var(--vt-brand);
+.insight-box > strong {
+  display: block;
+  margin-bottom: 8px;
+  color: #4f46e5;
+  font-size: 19px;
 }
 
 .insight-box ul {
   margin: 0;
   padding-left: 18px;
   font-size: 13px;
-  line-height: 1.6;
+  line-height: 1.62;
+}
+
+.insight-box li + li {
+  margin-top: 6px;
+}
+
+.insight-list {
+  list-style: none;
+  padding-left: 0;
+}
+
+.insight-list li {
+  position: relative;
+  padding: 0 0 8px 18px;
+}
+
+.insight-list li::before {
+  content: "•";
+  position: absolute;
+  left: 2px;
+  top: 0;
+  font-size: 15px;
+  line-height: 1;
+  color: #5c56f2;
+}
+
+.insight-list li:not(:last-child) {
+  border-bottom: 1px dashed #d9def5;
+  margin-bottom: 8px;
 }
 
 .chat-panel {
@@ -1144,7 +1192,9 @@ button {
 
   .kpi-grid,
   .dashboard-grid,
+  .potential-grid,
   .potential-row,
+  .insight-grid,
   .lower-grid,
   .chat-panel {
     grid-template-columns: 1fr;

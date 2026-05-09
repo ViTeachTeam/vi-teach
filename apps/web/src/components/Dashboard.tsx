@@ -88,7 +88,8 @@ export function Dashboard({ workspaceIdOverride, teacherNameOverride, teacherEma
   const [csv, setCsv] = useState(sampleCsv);
   const [analysis, setAnalysis] = useState<ClassAnalysis>(initialAnalysis);
   const [lumi, setLumi] = useState<LumiAnalysis>(initialLumi);
-  const [selectedId, setSelectedId] = useState(initialAnalysis.students[0]?.student.id);
+  const [selectedAttentionId, setSelectedAttentionId] = useState(initialAnalysis.students[0]?.student.id);
+  const [selectedPotentialId, setSelectedPotentialId] = useState<string | undefined>(undefined);
   const [error, setError] = useState('');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [savedClasses, setSavedClasses] = useState<SavedClassState[]>([
@@ -119,13 +120,18 @@ export function Dashboard({ workspaceIdOverride, teacherNameOverride, teacherEma
   ]);
   const fileInput = useRef<HTMLInputElement>(null);
 
-  const selected = useMemo(
-    () => analysis.students.find((student) => student.student.id === selectedId) || analysis.students[0],
-    [analysis, selectedId]
-  );
+  const attentionStudents = useMemo(() => getAttentionStudents(analysis), [analysis]);
   const potentialStudents = useMemo(
-    () => analysis.students.filter((student) => student.riskLevel === 'low' && student.average >= 8 && student.trend >= 0),
+    () => getPotentialStudents(analysis),
     [analysis]
+  );
+  const selectedAttention = useMemo(
+    () => attentionStudents.find((student) => student.student.id === selectedAttentionId) || attentionStudents[0],
+    [attentionStudents, selectedAttentionId]
+  );
+  const selectedPotential = useMemo(
+    () => potentialStudents.find((student) => student.student.id === selectedPotentialId) || potentialStudents[0],
+    [potentialStudents, selectedPotentialId]
   );
   const classStorageKey = `viteach_saved_classes_${workspaceId}`;
   const teacherDisplayName = teacherNameOverride || analysis.teacherName || (language === 'en' ? 'Teacher' : 'Giáo viên');
@@ -143,7 +149,7 @@ export function Dashboard({ workspaceIdOverride, teacherNameOverride, teacherEma
       setAnalysis(parsed[0].analysis);
       setLumi(parsed[0].lumi);
       setCsv(parsed[0].csv);
-      setSelectedId(parsed[0].analysis.students[0]?.student.id);
+      syncSelectedStudents(parsed[0].analysis);
     } catch {
       // Ignore invalid local storage payload.
     }
@@ -191,7 +197,7 @@ export function Dashboard({ workspaceIdOverride, teacherNameOverride, teacherEma
       const local = analyzeClass(parseCsv(nextCsv));
       const localLumi = fallbackLumiAnalysis(local, language);
       setAnalysis(local);
-      setSelectedId(local.students[0]?.student.id);
+      syncSelectedStudents(local);
       setLumi(localLumi);
       upsertClass(local, localLumi, nextCsv);
 
@@ -204,7 +210,7 @@ export function Dashboard({ workspaceIdOverride, teacherNameOverride, teacherEma
       if (!response.ok) throw new Error(data.error || (language === 'en' ? 'Unable to analyze data.' : 'Không thể phân tích dữ liệu.'));
       setAnalysis(data.analysis);
       setLumi(data.lumi);
-      setSelectedId(data.analysis.students[0]?.student.id);
+      syncSelectedStudents(data.analysis);
       upsertClass(data.analysis, data.lumi, nextCsv);
       if (showPopup) {
         setAnalyzePopup({
@@ -269,9 +275,16 @@ export function Dashboard({ workspaceIdOverride, teacherNameOverride, teacherEma
     setAnalysis(target.analysis);
     setLumi(target.lumi);
     setCsv(target.csv);
-    setSelectedId(target.analysis.students[0]?.student.id);
+    syncSelectedStudents(target.analysis);
     setError('');
     setIsClassPickerOpen(false);
+  }
+
+  function syncSelectedStudents(nextAnalysis: ClassAnalysis) {
+    const nextAttention = getAttentionStudents(nextAnalysis)[0]?.student.id;
+    const nextPotential = getPotentialStudents(nextAnalysis)[0]?.student.id;
+    setSelectedAttentionId(nextAttention);
+    setSelectedPotentialId(nextPotential);
   }
 
   function refreshDashboard() {
@@ -462,9 +475,9 @@ export function Dashboard({ workspaceIdOverride, teacherNameOverride, teacherEma
               <div className="potential-list">
                 {potentialStudents.slice(0, 5).map((student) => (
                   <button
-                    className={selected?.student.id === student.student.id ? 'potential-row selected' : 'potential-row'}
+                    className={selectedPotential?.student.id === student.student.id ? 'potential-row selected' : 'potential-row'}
                     key={student.student.id}
-                    onClick={() => setSelectedId(student.student.id)}
+                    onClick={() => setSelectedPotentialId(student.student.id)}
                   >
                     <span>
                       <b>{student.student.name}</b>
@@ -483,6 +496,27 @@ export function Dashboard({ workspaceIdOverride, teacherNameOverride, teacherEma
               </div>
             )}
           </Panel>
+
+          {selectedPotential ? (
+            <Panel className="potential-detail" title={`${selectedPotential.student.name} · ${language === 'en' ? 'Potential' : 'Tiềm năng'}`} language={language}>
+              <div className="student-meta">{language === 'en' ? 'ID' : 'SBD'}: {selectedPotential.student.id} | {selectedPotential.student.gender || 'N/A'} | {analysis.className}</div>
+              <div className="detail-stack">
+                <div className="chart-card">
+                  <TrendChart student={selectedPotential} language={language} />
+                </div>
+                <div className="insight-grid">
+                  <div className="insight-box">
+                    <strong>{language === 'en' ? 'Strength Drivers' : 'Năng lực nổi bật'}</strong>
+                    <ul className="insight-list">{buildPotentialReasonDetails(selectedPotential, language).map((item) => <li key={item}>{item}</li>)}</ul>
+                  </div>
+                  <div className="insight-box">
+                    <strong>{language === 'en' ? 'Growth Suggestions' : 'Gợi ý bồi dưỡng'}</strong>
+                    <ul className="insight-list">{buildPotentialSuggestions(selectedPotential, language).map((item) => <li key={item}>{item}</li>)}</ul>
+                  </div>
+                </div>
+              </div>
+            </Panel>
+          ) : null}
         </section>
 
         <section className="lower-grid">
@@ -492,11 +526,11 @@ export function Dashboard({ workspaceIdOverride, teacherNameOverride, teacherEma
               <span>{language === 'en' ? 'Risk Level' : 'Mức độ rủi ro'}</span>
               <span>{language === 'en' ? 'Main Issue' : 'Vấn đề chính'}</span>
             </div>
-            {analysis.students.slice(0, 6).map((student) => (
+            {attentionStudents.slice(0, 6).map((student) => (
               <button
-                className={selected?.student.id === student.student.id ? 'student-row selected' : 'student-row'}
+                className={selectedAttention?.student.id === student.student.id ? 'student-row selected' : 'student-row'}
                 key={student.student.id}
-                onClick={() => setSelectedId(student.student.id)}
+                onClick={() => setSelectedAttentionId(student.student.id)}
               >
                 <span><b>{student.student.name}</b><small>{language === 'en' ? 'ID' : 'SBD'}: {student.student.id}</small></span>
                 <RiskPill level={student.riskLevel} language={language} />
@@ -505,9 +539,9 @@ export function Dashboard({ workspaceIdOverride, teacherNameOverride, teacherEma
             ))}
           </Panel>
 
-          {selected ? (
-            <Panel className="student-detail" title={`${selected.student.name} · ${riskLabel(selected.riskLevel, language)}`} language={language}>
-              <div className="student-meta">{language === 'en' ? 'ID' : 'SBD'}: {selected.student.id} | {selected.student.gender || 'N/A'} | {analysis.className}</div>
+          {selectedAttention ? (
+            <Panel className="student-detail" title={`${selectedAttention.student.name} · ${riskLabel(selectedAttention.riskLevel, language)}`} language={language}>
+              <div className="student-meta">{language === 'en' ? 'ID' : 'SBD'}: {selectedAttention.student.id} | {selectedAttention.student.gender || 'N/A'} | {analysis.className}</div>
               <Tabs defaultValue="overview" className="tabs-shell">
                 <TabsList className="tabs">
                   <TabsTrigger value="overview">{language === 'en' ? 'Overview' : 'Tổng quan'}</TabsTrigger>
@@ -516,14 +550,19 @@ export function Dashboard({ workspaceIdOverride, teacherNameOverride, teacherEma
                   <TabsTrigger value="insight">AI Insight</TabsTrigger>
                 </TabsList>
               </Tabs>
-              <div className="detail-grid">
-                <TrendChart student={selected} language={language} />
-                <div className="insight-box">
-                  <strong>Lumi Insight</strong>
-                  <h4>{language === 'en' ? 'Risk Reasons' : 'Lý do rủi ro'}</h4>
-                  <ul>{selected.weakCategories.slice(0, 4).map((item) => <li key={item}>{buildRiskReasonDetail(selected, item, language)}</li>)}</ul>
-                  <h4>{language === 'en' ? 'Lumi Suggestions' : 'Lumi gợi ý'}</h4>
-                  <ul>{buildStudentSuggestions(selected, language).map((item) => <li key={item}>{item}</li>)}</ul>
+              <div className="detail-stack">
+                <div className="chart-card">
+                  <TrendChart student={selectedAttention} language={language} />
+                </div>
+                <div className="insight-grid">
+                  <div className="insight-box">
+                    <strong>{language === 'en' ? 'Risk Reasons' : 'Lý do rủi ro'}</strong>
+                    <ul className="insight-list">{selectedAttention.weakCategories.slice(0, 4).map((item) => <li key={item}>{buildRiskReasonDetail(selectedAttention, item, language)}</li>)}</ul>
+                  </div>
+                  <div className="insight-box">
+                    <strong>{language === 'en' ? 'Lumi Suggestions' : 'Lumi gợi ý'}</strong>
+                    <ul className="insight-list">{buildStudentSuggestions(selectedAttention, language).map((item) => <li key={item}>{item}</li>)}</ul>
+                  </div>
                 </div>
               </div>
             </Panel>
@@ -861,6 +900,46 @@ function buildStudentSuggestions(student: StudentAnalysis, language: Language) {
   }
 
   return suggestions.slice(0, 3);
+}
+
+function buildPotentialReasonDetails(student: StudentAnalysis, language: Language) {
+  const strengths = student.strengths.slice(0, 3).map((item) => translateDynamicText(item, language));
+  const topStrength = strengths[0] || (language === 'en' ? 'Consistent performance' : 'Năng lực ổn định');
+  return [
+    language === 'en'
+      ? `Average score is ${student.average.toFixed(1)}/10 with a ${formatTrend(student.trend, 'en').toLowerCase()} trajectory.`
+      : `Điểm trung bình ${student.average.toFixed(1)}/10 với xu hướng ${formatTrend(student.trend, 'vi').toLowerCase()}.`,
+    language === 'en'
+      ? `Strongest competency is ${topStrength}, showing readiness for higher-complexity tasks.`
+      : `Năng lực nổi bật là ${topStrength}, cho thấy khả năng sẵn sàng với nhiệm vụ có độ khó cao hơn.`,
+    language === 'en'
+      ? `Current risk level is low, suitable for enrichment track instead of remediation.`
+      : `Mức rủi ro hiện tại là thấp, phù hợp với định hướng bồi dưỡng thay vì hỗ trợ khắc phục.`
+  ];
+}
+
+function buildPotentialSuggestions(student: StudentAnalysis, language: Language) {
+  const name = student.student.name;
+  return [
+    language === 'en'
+      ? `Assign ${name} an advanced extension task and ask for a short presentation in class.`
+      : `Giao cho ${name} một nhiệm vụ mở rộng nâng cao và trình bày ngắn trước lớp.`,
+    language === 'en'
+      ? `Use ${name} as a peer mentor in group work to support medium-risk students.`
+      : `Phân công ${name} hỗ trợ bạn học theo mô hình kèm cặp trong hoạt động nhóm.`,
+    language === 'en'
+      ? `Track progress with a challenge rubric every two weeks to sustain growth momentum.`
+      : `Theo dõi tiến độ bằng rubric thử thách mỗi 2 tuần để duy trì đà phát triển.`
+  ];
+}
+
+function getAttentionStudents(analysis: ClassAnalysis) {
+  const focused = analysis.students.filter((student) => student.riskLevel === 'high' || student.riskLevel === 'medium');
+  return focused.length > 0 ? focused : analysis.students;
+}
+
+function getPotentialStudents(analysis: ClassAnalysis) {
+  return analysis.students.filter((student) => student.riskLevel === 'low' && student.average >= 8 && student.trend >= 0);
 }
 
 function navIcon(index: number) {
