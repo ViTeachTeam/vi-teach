@@ -122,8 +122,8 @@ export function Dashboard({ workspaceIdOverride, teacherNameOverride, teacherEma
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [chat, setChat] = useState<ChatMessage[]>([
     { role: 'lumi', content: language === 'en'
-      ? 'You can ask Lumi about priority student groups, review plans, or how to organize 1:1 meetings.'
-      : 'Cô có thể hỏi Lumi về nhóm học sinh cần chú ý, kế hoạch ôn tập hoặc cách tổ chức gặp 1:1.' }
+      ? 'You can ask ViTeach about priority student groups, review plans, or how to organize 1:1 meetings.'
+      : 'Cô có thể hỏi trợ lý ViTeach về nhóm học sinh cần chú ý, kế hoạch ôn tập hoặc cách tổ chức gặp 1:1.' }
   ]);
   const fileInput = useRef<HTMLInputElement>(null);
 
@@ -180,8 +180,8 @@ export function Dashboard({ workspaceIdOverride, teacherNameOverride, teacherEma
         {
           role: 'lumi',
           content: language === 'en'
-            ? 'You can ask Lumi about priority student groups, review plans, or how to organize 1:1 meetings.'
-            : 'Cô có thể hỏi Lumi về nhóm học sinh cần chú ý, kế hoạch ôn tập hoặc cách tổ chức gặp 1:1.'
+            ? 'You can ask ViTeach about priority student groups, review plans, or how to organize 1:1 meetings.'
+            : 'Cô có thể hỏi trợ lý ViTeach về nhóm học sinh cần chú ý, kế hoạch ôn tập hoặc cách tổ chức gặp 1:1.'
         }
       ];
     });
@@ -196,8 +196,8 @@ export function Dashboard({ workspaceIdOverride, teacherNameOverride, teacherEma
         status: 'analyzing',
         title: language === 'en' ? 'Analyzing your class data' : 'Đang phân tích dữ liệu lớp',
         detail: language === 'en'
-          ? 'Lumi is reading scores, grouping risks, and building teaching actions...'
-          : 'Lumi đang đọc dữ liệu, phân nhóm rủi ro và tạo gợi ý giảng dạy...'
+          ? 'ViTeach is reading scores, grouping risks, and building teaching actions...'
+          : 'Trợ lý ViTeach đang đọc dữ liệu, phân nhóm rủi ro và tạo gợi ý giảng dạy...'
       });
     }
     try {
@@ -609,7 +609,7 @@ export function Dashboard({ workspaceIdOverride, teacherNameOverride, teacherEma
                 value={question}
                 onChange={(event) => setQuestion(event.target.value)}
                 onKeyDown={(event) => event.key === 'Enter' && void askLumi()}
-                placeholder={language === 'en' ? 'Ask Lumi...' : 'Hỏi Lumi...'}
+                placeholder={language === 'en' ? 'Ask ViTeach...' : 'Hỏi trợ lý ViTeach...'}
               />
               <Button onClick={() => void askLumi()}>
                 <Send />
