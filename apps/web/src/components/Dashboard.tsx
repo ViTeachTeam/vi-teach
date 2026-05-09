@@ -54,6 +54,7 @@ export function Dashboard({ workspaceIdOverride, teacherNameOverride, teacherEma
     const existing = window.localStorage.getItem('viteach_lang');
     return existing === 'en' ? 'en' : 'vi';
   });
+  const [expandedTeacher, setExpandedTeacher] = useState(false);
   const [workspaceId] = useState(() => {
     if (typeof window === 'undefined') return 'demo';
     const storageKey = 'viteach_workspace_id';
@@ -181,15 +182,50 @@ export function Dashboard({ workspaceIdOverride, teacherNameOverride, teacherEma
           ))}
         </nav>
         <Separator />
-        <Card className="teacher-card">
-          <Avatar>
-            <AvatarFallback>{initials(teacherDisplayName)}</AvatarFallback>
-          </Avatar>
-          <div>
-            <strong>{teacherDisplayName}</strong>
-            <span>{teacherEmail || (language === 'en' ? `Teacher · ${analysis.subject || 'No subject provided'}` : `Giáo viên ${analysis.subject || 'chưa cung cấp môn'}`)}</span>
-          </div>
-        </Card>
+        <div className="teacher-card-wrapper">
+          <Card className="teacher-card">
+            <Button
+              variant="ghost"
+              className="teacher-profile"
+              onClick={() => setExpandedTeacher(!expandedTeacher)}
+            >
+              <Avatar>
+                <AvatarFallback>{initials(teacherDisplayName)}</AvatarFallback>
+              </Avatar>
+              <div className="teacher-info">
+                <strong>{teacherDisplayName}</strong>
+                <span>{teacherEmail || (language === 'en' ? `Teacher · ${analysis.subject || 'No subject provided'}` : `Giáo viên ${analysis.subject || 'chưa cung cấp môn'}`)}</span>
+              </div>
+            </Button>
+          </Card>
+          {expandedTeacher && (
+            <div className="teacher-dropdown-menu">
+              <div className="menu-item">
+                <div className="menu-item-label">{language === 'en' ? 'Language' : 'Ngôn ngữ'}</div>
+                <div className="menu-item-content">
+                  <Button size="sm" variant={language === 'vi' ? 'default' : 'outline'} onClick={() => { setLanguage('vi'); if (typeof window !== 'undefined') window.localStorage.setItem('viteach_lang', 'vi'); }}>
+                    VI
+                  </Button>
+                  <Button size="sm" variant={language === 'en' ? 'default' : 'outline'} onClick={() => { setLanguage('en'); if (typeof window !== 'undefined') window.localStorage.setItem('viteach_lang', 'en'); }}>
+                    EN
+                  </Button>
+                </div>
+              </div>
+              {onSignOut && (
+                <>
+                  <Separator className="my-1" />
+                  <Button
+                    variant="ghost"
+                    className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50"
+                    onClick={() => void onSignOut()}
+                  >
+                    {language === 'en' ? 'Sign out' : 'Đăng xuất'}
+                  </Button>
+                </>
+              )}
+            </div>
+          )}
+        </div>
         <Card className="class-card">
           <span>{language === 'en' ? 'Current Class' : 'Lớp hiện tại'}</span>
           <strong>{analysis.className}</strong>
@@ -208,14 +244,6 @@ export function Dashboard({ workspaceIdOverride, teacherNameOverride, teacherEma
               : `Theo dõi lớp ${analysis.className}, phát hiện học sinh cần hỗ trợ và nhận gợi ý giảng dạy từ Lumi.`}</p>
           </div>
           <div className="actions">
-            <div className="lang-toggle" role="group" aria-label="language-toggle">
-              <Button variant={language === 'vi' ? 'default' : 'outline'} onClick={() => { setLanguage('vi'); if (typeof window !== 'undefined') window.localStorage.setItem('viteach_lang', 'vi'); }}>
-                VI
-              </Button>
-              <Button variant={language === 'en' ? 'default' : 'outline'} onClick={() => { setLanguage('en'); if (typeof window !== 'undefined') window.localStorage.setItem('viteach_lang', 'en'); }}>
-                EN
-              </Button>
-            </div>
             <input
               ref={fileInput}
               accept=".csv,text/csv"
@@ -234,11 +262,6 @@ export function Dashboard({ workspaceIdOverride, teacherNameOverride, teacherEma
               <Sparkles />
               {isAnalyzing ? (language === 'en' ? 'Analyzing...' : 'Đang phân tích...') : (language === 'en' ? 'Analyze with Lumi' : 'Phân tích với Lumi')}
             </Button>
-            {onSignOut ? (
-              <Button variant="outline" onClick={() => void onSignOut()}>
-                {language === 'en' ? 'Sign out' : 'Đăng xuất'}
-              </Button>
-            ) : null}
           </div>
         </header>
 

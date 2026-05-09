@@ -181,13 +181,129 @@ button {
   background: rgba(255, 255, 255, 0.75);
 }
 
-.teacher-card {
+.teacher-card-wrapper {
+  position: relative;
   margin-top: auto;
 }
 
-.teacher-card strong,
+.teacher-card {
+  padding: 0;
+  background: transparent;
+  border: none;
+}
+
+.teacher-profile {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid var(--vt-line);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.75);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+  height: auto;
+  justify-content: flex-start;
+}
+
+.teacher-profile:hover {
+  background: rgba(255, 255, 255, 0.95);
+  border-color: var(--vt-brand);
+}
+
+.teacher-profile:active {
+  background: rgba(255, 255, 255, 1);
+}
+
+.teacher-info {
+  min-width: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.teacher-card strong {
+  font-size: 14px;
+  font-weight: 600;
+  color: #263252;
+}
+
 .teacher-card span {
-  display: block;
+  font-size: 12px;
+  color: var(--vt-muted);
+  margin-top: 2px;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+.teacher-dropdown-menu {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 0;
+  right: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px 0;
+  border: 1px solid var(--vt-line);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  z-index: 50;
+  overflow: hidden;
+}
+
+.menu-item {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px 12px;
+}
+
+.menu-item-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--vt-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.menu-item-content {
+  display: flex;
+  gap: 8px;
+}
+
+.menu-item-content button {
+  flex: 1;
+  font-size: 12px;
+  height: 32px;
+  padding: 6px 12px;
+}
+
+.teacher-dropdown-menu button {
+  margin: 0;
+  border-radius: 0;
+  padding: 12px;
+  height: auto;
+  justify-content: flex-start;
+}
+
+.teacher-dropdown-menu button:first-of-type {
+  border-radius: 0;
+}
+
+.teacher-dropdown-menu button:last-of-type {
+  border-radius: 0;
+}
+
+.teacher-card,
+
+.class-card p {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  margin: 4px 0;
 }
 
 .class-card strong {
