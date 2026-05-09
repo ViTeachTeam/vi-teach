@@ -45,6 +45,16 @@ type AnalyzePopupState = {
   detail: string;
 };
 
+type SavedClassState = {
+  id: string;
+  className: string;
+  subject: string;
+  analysis: ClassAnalysis;
+  lumi: LumiAnalysis;
+  csv: string;
+  updatedAt: number;
+};
+
 type DashboardProps = {
   workspaceIdOverride?: string;
   teacherNameOverride?: string;
@@ -54,6 +64,7 @@ type DashboardProps = {
 
 const initialAnalysis = analyzeClass(parseCsv(sampleCsv));
 const initialLumi = fallbackLumiAnalysis(initialAnalysis);
+const initialClassId = buildClassId(initialAnalysis.className, initialAnalysis.subject);
 
 export function Dashboard({ workspaceIdOverride, teacherNameOverride, teacherEmail, onSignOut }: DashboardProps) {
   const [language, setLanguage] = useState<Language>(() => {
@@ -81,6 +92,19 @@ export function Dashboard({ workspaceIdOverride, teacherNameOverride, teacherEma
   const [selectedId, setSelectedId] = useState(initialAnalysis.students[0]?.student.id);
   const [error, setError] = useState('');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [savedClasses, setSavedClasses] = useState<SavedClassState[]>([
+    {
+      id: initialClassId,
+      className: initialAnalysis.className,
+      subject: initialAnalysis.subject || (language === 'en' ? 'Not provided' : 'Chưa cung cấp'),
+      analysis: initialAnalysis,
+      lumi: initialLumi,
+      csv: sampleCsv,
+      updatedAt: Date.now()
+    }
+  ]);
+  const [currentClassId, setCurrentClassId] = useState(initialClassId);
+  const [isClassPickerOpen, setIsClassPickerOpen] = useState(false);
   const [analyzePopup, setAnalyzePopup] = useState<AnalyzePopupState>({
     open: false,
     status: 'analyzing',
@@ -100,7 +124,32 @@ export function Dashboard({ workspaceIdOverride, teacherNameOverride, teacherEma
     () => analysis.students.find((student) => student.student.id === selectedId) || analysis.students[0],
     [analysis, selectedId]
   );
+  const classStorageKey = `viteach_saved_classes_${workspaceId}`;
   const teacherDisplayName = teacherNameOverride || analysis.teacherName || (language === 'en' ? 'Teacher' : 'Giáo viên');
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const raw = window.localStorage.getItem(classStorageKey);
+    if (!raw) return;
+
+    try {
+      const parsed = JSON.parse(raw) as SavedClassState[];
+      if (!Array.isArray(parsed) || parsed.length === 0) return;
+      setSavedClasses(parsed);
+      setCurrentClassId(parsed[0].id);
+      setAnalysis(parsed[0].analysis);
+      setLumi(parsed[0].lumi);
+      setCsv(parsed[0].csv);
+      setSelectedId(parsed[0].analysis.students[0]?.student.id);
+    } catch {
+      // Ignore invalid local storage payload.
+    }
+  }, [classStorageKey]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    window.localStorage.setItem(classStorageKey, JSON.stringify(savedClasses));
+  }, [classStorageKey, savedClasses]);
 
   useEffect(() => {
     setLumi((current) => {
@@ -137,9 +186,11 @@ export function Dashboard({ workspaceIdOverride, teacherNameOverride, teacherEma
     }
     try {
       const local = analyzeClass(parseCsv(nextCsv));
+      const localLumi = fallbackLumiAnalysis(local, language);
       setAnalysis(local);
       setSelectedId(local.students[0]?.student.id);
-      setLumi(fallbackLumiAnalysis(local, language));
+      setLumi(localLumi);
+      upsertClass(local, localLumi, nextCsv);
 
       const response = await fetch('/api/analyze', {
         method: 'POST',
@@ -151,6 +202,7 @@ export function Dashboard({ workspaceIdOverride, teacherNameOverride, teacherEma
       setAnalysis(data.analysis);
       setLumi(data.lumi);
       setSelectedId(data.analysis.students[0]?.student.id);
+      upsertClass(data.analysis, data.lumi, nextCsv);
       if (showPopup) {
         setAnalyzePopup({
           open: true,
@@ -185,6 +237,38 @@ export function Dashboard({ workspaceIdOverride, teacherNameOverride, teacherEma
 
   function closeAnalyzePopup() {
     setAnalyzePopup((current) => ({ ...current, open: false }));
+  }
+
+  function upsertClass(nextAnalysis: ClassAnalysis, nextLumi: LumiAnalysis, nextCsv: string) {
+    const id = buildClassId(nextAnalysis.className, nextAnalysis.subject);
+    const nextClass: SavedClassState = {
+      id,
+      className: nextAnalysis.className,
+      subject: nextAnalysis.subject || (language === 'en' ? 'Not provided' : 'Chưa cung cấp'),
+      analysis: nextAnalysis,
+      lumi: nextLumi,
+      csv: nextCsv,
+      updatedAt: Date.now()
+    };
+
+    setSavedClasses((previous) => {
+      const rest = previous.filter((item) => item.id !== id);
+      return [nextClass, ...rest];
+    });
+    setCurrentClassId(id);
+  }
+
+  function switchClass(classId: string) {
+    const target = savedClasses.find((item) => item.id === classId);
+    if (!target) return;
+
+    setCurrentClassId(target.id);
+    setAnalysis(target.analysis);
+    setLumi(target.lumi);
+    setCsv(target.csv);
+    setSelectedId(target.analysis.students[0]?.student.id);
+    setError('');
+    setIsClassPickerOpen(false);
   }
 
   function refreshDashboard() {
@@ -281,7 +365,10 @@ export function Dashboard({ workspaceIdOverride, teacherNameOverride, teacherEma
           <strong>{analysis.className}</strong>
           <p>{language === 'en' ? `Subject: ${analysis.subject || 'Not provided'}` : `Môn: ${analysis.subject || 'Chưa cung cấp'}`}</p>
           <p>{language === 'en' ? `Class size: ${analysis.totalStudents} students` : `Sĩ số: ${analysis.totalStudents} học sinh`}</p>
-          <Button variant="outline">{language === 'en' ? 'Switch Class' : 'Đổi lớp'} <span>→</span></Button>
+          <Button variant="outline" onClick={() => setIsClassPickerOpen(true)}>
+            {language === 'en' ? 'Switch Class' : 'Đổi lớp'}
+            <span>→</span>
+          </Button>
         </Card>
       </aside>
 
@@ -480,6 +567,46 @@ export function Dashboard({ workspaceIdOverride, teacherNameOverride, teacherEma
           </Card>
         </div>
       ) : null}
+
+      {isClassPickerOpen ? (
+        <div className="class-picker-backdrop" role="dialog" aria-modal="true" aria-labelledby="class-picker-title">
+          <Card className="class-picker-card">
+            <CardHeader>
+              <CardTitle id="class-picker-title">{language === 'en' ? 'Switch Class' : 'Đổi lớp'}</CardTitle>
+              <CardDescription>
+                {language === 'en'
+                  ? `You have ${savedClasses.length} saved class ${savedClasses.length > 1 ? 'views' : 'view'} from uploaded CSV files.`
+                  : `Bạn đang có ${savedClasses.length} lớp đã lưu từ các file CSV đã tải lên.`}
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="class-picker-content">
+              <div className="class-list">
+                {savedClasses.map((item) => (
+                  <button
+                    className={item.id === currentClassId ? 'class-item active' : 'class-item'}
+                    key={item.id}
+                    onClick={() => switchClass(item.id)}
+                  >
+                    <div>
+                      <strong>{item.className}</strong>
+                      <span>{language === 'en' ? `Subject: ${item.subject}` : `Môn: ${item.subject}`}</span>
+                      <small>{language === 'en' ? 'Updated' : 'Cập nhật'}: {formatTimestamp(item.updatedAt, language)}</small>
+                    </div>
+                    {item.id === currentClassId ? (
+                      <Badge variant="success">{language === 'en' ? 'Current' : 'Hiện tại'}</Badge>
+                    ) : null}
+                  </button>
+                ))}
+              </div>
+              <div className="class-picker-actions">
+                <Button variant="outline" onClick={() => setIsClassPickerOpen(false)}>
+                  {language === 'en' ? 'Close' : 'Đóng'}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      ) : null}
     </main>
   );
 }
@@ -608,4 +735,21 @@ function translateDynamicText(text: string, language: Language) {
     'Hoạt động lớp': 'Class activity'
   };
   return map[text] || text;
+}
+
+function buildClassId(className?: string, subject?: string) {
+  const normalizedClass = (className || 'class').trim().toLowerCase().replace(/\s+/g, '-');
+  const normalizedSubject = (subject || 'general').trim().toLowerCase().replace(/\s+/g, '-');
+  return `${normalizedClass}__${normalizedSubject}`;
+}
+
+function formatTimestamp(timestamp: number, language: Language) {
+  try {
+    return new Intl.DateTimeFormat(language === 'en' ? 'en-US' : 'vi-VN', {
+      dateStyle: 'short',
+      timeStyle: 'short'
+    }).format(new Date(timestamp));
+  } catch {
+    return new Date(timestamp).toLocaleString();
+  }
 }

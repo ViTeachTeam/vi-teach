@@ -24,6 +24,17 @@ describe('CSV parsing', () => {
     expect(students[0].final).toBe(8.2);
   });
 
+  it('maps Vietnamese subject header variants correctly', () => {
+    const csv = [
+      'Họ tên;Tên lớp;Tên môn học;Điểm miệng;Điểm cuối kỳ',
+      'Nguyễn Văn C;10A2;Vật lý;7,0;8,0'
+    ].join('\n');
+
+    const analysis = analyzeClass(parseCsv(csv));
+    expect(analysis.className).toBe('10A2');
+    expect(analysis.subject).toBe('Vật lý');
+  });
+
   it('rejects missing student names', () => {
     expect(() => parseCsv('student_name,final\n,8')).toThrow('thiếu họ tên');
   });
