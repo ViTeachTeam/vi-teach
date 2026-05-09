@@ -64,13 +64,13 @@ jobs:
         run: npm ci --legacy-peer-deps
 
       - name: Pull Vercel preview environment
-        run: npx vercel@latest pull --yes --environment=preview --cwd apps/web --token=${{ secrets.VERCEL_TOKEN }}
+        run: npx vercel@latest pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
         env:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
 
       - name: Build Vercel preview artifact
-        run: npx vercel@latest build --cwd apps/web --token=${{ secrets.VERCEL_TOKEN }}
+        run: npx vercel@latest build --token=${{ secrets.VERCEL_TOKEN }}
         env:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
@@ -78,7 +78,7 @@ jobs:
       - name: Deploy preview to Vercel
         id: deploy
         run: |
-          url="$(npx vercel@latest deploy --prebuilt --cwd apps/web --token=${{ secrets.VERCEL_TOKEN }})"
+          url="$(npx vercel@latest deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }})"
           echo "url=$url" >> "$GITHUB_OUTPUT"
         env:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
@@ -106,13 +106,13 @@ jobs:
         run: npm ci --legacy-peer-deps
 
       - name: Pull Vercel production environment
-        run: npx vercel@latest pull --yes --environment=production --cwd apps/web --token=${{ secrets.VERCEL_TOKEN }}
+        run: npx vercel@latest pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
         env:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
 
       - name: Build Vercel production artifact
-        run: npx vercel@latest build --prod --cwd apps/web --token=${{ secrets.VERCEL_TOKEN }}
+        run: npx vercel@latest build --prod --token=${{ secrets.VERCEL_TOKEN }}
         env:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
@@ -120,7 +120,7 @@ jobs:
       - name: Deploy production to Vercel
         id: deploy
         run: |
-          url="$(npx vercel@latest deploy --prebuilt --prod --cwd apps/web --token=${{ secrets.VERCEL_TOKEN }})"
+          url="$(npx vercel@latest deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }})"
           echo "url=$url" >> "$GITHUB_OUTPUT"
         env:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}

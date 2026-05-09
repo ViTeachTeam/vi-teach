@@ -39,7 +39,7 @@ VERCEL_ORG_ID=...
 VERCEL_PROJECT_ID=...
 ```
 
-In Vercel, link the project to this repository and set the project root directory to `apps/web` for the Next.js app. Use the Next.js framework preset. If Vercel shows an Output Directory value like `public`, clear it or set it to `.next`; `apps/web/vercel.json` also pins this for CI deploys.
+In Vercel, link the project to this repository with the repository root as the project root. Use the Next.js framework preset. If Vercel shows an Output Directory value like `public`, clear it or set it to `apps/web/.next`; `vercel.json` also pins this for CI deploys.
 
 Add the app runtime environment variables in Vercel as well:
 
