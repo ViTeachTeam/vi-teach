@@ -400,8 +400,8 @@ export function Dashboard({ workspaceIdOverride, teacherNameOverride, teacherEma
           <div>
             <h1>{language === 'en' ? `Hello ${teacherDisplayName}` : `Xin chào ${teacherDisplayName}`}</h1>
             <p>{language === 'en'
-              ? `Track class ${analysis.className}, detect students needing support, and get teaching suggestions from Lumi.`
-              : `Theo dõi lớp ${analysis.className}, phát hiện học sinh cần hỗ trợ và nhận gợi ý giảng dạy từ Lumi.`}</p>
+              ? `Track class ${analysis.className}, detect students needing support, and get teaching suggestions.`
+              : `Theo dõi lớp ${analysis.className}, phát hiện học sinh cần hỗ trợ và nhận gợi ý giảng dạy.`}</p>
           </div>
           <div className="actions">
             <input
@@ -462,7 +462,7 @@ export function Dashboard({ workspaceIdOverride, teacherNameOverride, teacherEma
               ))}
             </div>
           </Panel>
-          <Panel title={language === 'en' ? 'Action Suggestions from Lumi' : 'Gợi ý hành động từ Lumi'} language={language}>
+          <Panel title={language === 'en' ? 'Action Suggestions' : 'Gợi ý hành động'} language={language}>
             <div className="suggestions">
               {lumi.teachingSuggestions.slice(0, 3).map((item) => <p key={item}>{item}</p>)}
             </div>
@@ -571,7 +571,7 @@ export function Dashboard({ workspaceIdOverride, teacherNameOverride, teacherEma
                     <ul className="insight-list">{selectedAttention.weakCategories.slice(0, 4).map((item) => <li key={item}>{buildRiskReasonDetail(selectedAttention, item, language)}</li>)}</ul>
                   </div>
                   <div className="insight-box">
-                    <strong>{language === 'en' ? 'Lumi Suggestions' : 'Lumi gợi ý'}</strong>
+                    <strong>{language === 'en' ? 'Suggestions' : 'Gợi ý'}</strong>
                     <ul className="insight-list">{buildStudentSuggestions(selectedAttention, language).map((item) => <li key={item}>{item}</li>)}</ul>
                   </div>
                 </div>
