@@ -524,20 +524,24 @@ export function Dashboard({ workspaceIdOverride, teacherNameOverride, teacherEma
 
         <section className="lower-grid">
           <Panel title={language === 'en' ? 'Students Requiring Attention' : 'Học sinh cần chú ý'} className="student-list-panel" language={language}>
-            <div className="table-head">
-              <span>{language === 'en' ? 'Student' : 'Học sinh'}</span>
-              <span>{language === 'en' ? 'Risk Level' : 'Mức độ rủi ro'}</span>
-              <span>{language === 'en' ? 'Main Issue' : 'Vấn đề chính'}</span>
-            </div>
             {attentionStudents.slice(0, 6).map((student) => (
               <button
-                className={selectedAttention?.student.id === student.student.id ? 'student-row selected' : 'student-row'}
+                className={selectedAttention?.student.id === student.student.id ? 'attention-row selected' : 'attention-row'}
                 key={student.student.id}
                 onClick={() => setSelectedAttentionId(student.student.id)}
               >
-                <span><b>{student.student.name}</b><small>{language === 'en' ? 'ID' : 'SBD'}: {student.student.id}</small></span>
-                <RiskPill level={student.riskLevel} language={language} />
-                <span>{translateDynamicText(student.issue, language)}</span>
+                <span>
+                  <b>{student.student.name}</b>
+                  <small>{language === 'en' ? 'ID' : 'SBD'}: {student.student.id}</small>
+                </span>
+                <span>
+                  <b>{language === 'en' ? 'Risk Level' : 'Mức độ rủi ro'}</b>
+                  <small><RiskPill level={student.riskLevel} language={language} /></small>
+                </span>
+                <span>
+                  <b>{language === 'en' ? 'Main Issue' : 'Vấn đề chính'}</b>
+                  <small>{translateDynamicText(student.issue, language)}</small>
+                </span>
               </button>
             ))}
           </Panel>

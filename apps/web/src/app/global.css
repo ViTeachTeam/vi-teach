@@ -655,9 +655,10 @@ button {
 }
 
 .table-head,
-.student-row {
+.student-row,
+.attention-row {
   display: grid;
-  grid-template-columns: 1.4fr 142px 1.2fr;
+  grid-template-columns: 1fr 150px 1.15fr;
   gap: 14px;
   align-items: center;
 }
@@ -679,6 +680,46 @@ button {
 
 .student-row.selected {
   background: #fbfaff;
+}
+
+.attention-row {
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 10px;
+  border: 1px solid #edf0f8;
+  border-radius: 10px;
+  background: #fff;
+  text-align: left;
+}
+
+.attention-row:hover {
+  border-color: #d9def5;
+  background: #fbfbff;
+}
+
+.attention-row.selected {
+  border-color: #b6b3ff;
+  background: #f6f5ff;
+}
+
+.attention-row span {
+  display: grid;
+  gap: 2px;
+}
+
+.attention-row b {
+  font-size: 13px;
+  color: #1e2750;
+}
+
+.attention-row small {
+  font-size: 12px;
+  color: var(--vt-muted);
+  line-height: 1.4;
+}
+
+.attention-row .risk-pill {
+  margin-top: 4px;
 }
 
 .student-row b,
