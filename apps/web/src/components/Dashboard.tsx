@@ -123,6 +123,10 @@ export function Dashboard({ workspaceIdOverride, teacherNameOverride, teacherEma
     () => analysis.students.find((student) => student.student.id === selectedId) || analysis.students[0],
     [analysis, selectedId]
   );
+  const potentialStudents = useMemo(
+    () => analysis.students.filter((student) => student.riskLevel === 'low' && student.average >= 8 && student.trend >= 0),
+    [analysis]
+  );
   const classStorageKey = `viteach_saved_classes_${workspaceId}`;
   const teacherDisplayName = teacherNameOverride || analysis.teacherName || (language === 'en' ? 'Teacher' : 'Giáo viên');
 
@@ -413,6 +417,14 @@ export function Dashboard({ workspaceIdOverride, teacherNameOverride, teacherEma
           <Kpi title={language === 'en' ? 'High Risk' : 'Nguy cơ cao'} value={analysis.riskCounts.high} note={language === 'en' ? 'early support needed' : 'cần hỗ trợ sớm'} accent="red" icon={<AlertCircle />} />
           <Kpi title={language === 'en' ? 'Medium Risk' : 'Nguy cơ trung bình'} value={analysis.riskCounts.medium} note={language === 'en' ? 'monitor closely' : 'cần theo dõi'} accent="amber" icon={<BarChart3 />} />
           <Kpi title={language === 'en' ? 'Low Risk' : 'Nguy cơ thấp'} value={analysis.riskCounts.low} note={language === 'en' ? 'stable progress' : 'đang tiến bộ'} accent="green" icon={<CheckCircle2 />} />
+          <Kpi
+            title={language === 'en' ? 'Potential Students' : 'Học sinh tiềm năng'}
+            value={potentialStudents.length}
+            note={language === 'en' ? 'ready for enrichment' : 'sẵn sàng bồi dưỡng'}
+            delta={`${percent(potentialStudents.length, analysis.totalStudents)}%`}
+            accent="violet"
+            icon={<GraduationCap />}
+          />
         </section>
 
         <section className="dashboard-grid">
