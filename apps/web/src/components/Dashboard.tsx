@@ -14,7 +14,6 @@ import {
   LayoutDashboard,
   Send,
   Settings,
-  Sparkles,
   Upload,
   Users
 } from 'lucide-react';
@@ -391,13 +390,11 @@ export function Dashboard({ workspaceIdOverride, teacherNameOverride, teacherEma
                 if (file) void handleUpload(file);
               }}
             />
-            <Button variant="outline" onClick={() => fileInput.current?.click()}>
+            <Button variant="outline" onClick={() => fileInput.current?.click()} disabled={isAnalyzing}>
               <Upload />
-              {language === 'en' ? 'Upload Data' : 'Nhập dữ liệu'}
-            </Button>
-            <Button onClick={() => void runAnalysis()} disabled={isAnalyzing}>
-              <Sparkles />
-              {isAnalyzing ? (language === 'en' ? 'Analyzing...' : 'Đang phân tích...') : (language === 'en' ? 'Analyze with Lumi' : 'Phân tích với Lumi')}
+              {isAnalyzing
+                ? (language === 'en' ? 'Analyzing...' : 'Đang phân tích...')
+                : (language === 'en' ? 'Upload Data' : 'Nhập dữ liệu')}
             </Button>
           </div>
         </header>
