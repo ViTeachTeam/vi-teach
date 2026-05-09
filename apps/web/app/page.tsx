@@ -1,5 +1,5 @@
-import { Dashboard } from '../src/components/Dashboard';
+import { AuthGate } from '../src/components/AuthGate';
 
 export default function Index() {
-  return <Dashboard />;
+  return <AuthGate />;
 }

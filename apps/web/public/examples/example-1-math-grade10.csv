@@ -1,0 +1,11 @@
+student_id,student_name,gender,class_name,teacher_name,subject,oral_score,score_15m,bonus,penalty,midterm,final,practice,project,class_activity,attendance,homework_missing,participation
+S001,Nguyen Minh An,Nam,10A1,Nguyen Thi Lan,Mathematics,7.8,7.1,0.2,0.4,6.1,5.1,5.8,5.6,5.2,82,4,4.8
+S002,Tran Bao Chau,Nu,10A1,Nguyen Thi Lan,Mathematics,6.4,6.8,0.1,0,6.2,6.7,6.5,6.9,7.1,94,1,7.2
+S003,Vo Gia Bao,Nam,10A1,Nguyen Thi Lan,Mathematics,8.6,8.4,0.4,0,8.7,8.9,8.8,9.1,8.5,98,0,8.7
+S004,Pham Ngoc Linh,Nu,10A1,Nguyen Thi Lan,Mathematics,5.9,5.3,0,0.2,4.9,4.7,5.1,5.0,4.8,76,5,4.6
+S005,Hoang Duc Minh,Nam,10A1,Nguyen Thi Lan,Mathematics,6.1,6.2,0,0.1,5.8,6.0,5.4,5.6,5.5,85,3,5.2
+S006,Le Khanh Vy,Nu,10A1,Nguyen Thi Lan,Mathematics,9.1,8.8,0.3,0,9.0,9.2,8.7,9.4,9.0,100,0,9.1
+S007,Le Gia Han,Nu,10A1,Nguyen Thi Lan,Mathematics,6.8,6.2,0.1,0,5.7,6.1,5.8,6.0,5.6,88,2,5.9
+S008,Do Quoc Huy,Nam,10A1,Nguyen Thi Lan,Mathematics,7.2,7.4,0.2,0,7.0,7.6,7.5,7.3,7.1,96,1,7.4
+S009,Bui Mai Anh,Nu,10A1,Nguyen Thi Lan,Mathematics,8.0,7.8,0.2,0,7.9,8.2,8.1,8.4,8.0,97,0,8.2
+S010,Ngo Tuan Kiet,Nam,10A1,Nguyen Thi Lan,Mathematics,4.8,4.5,0,0.3,4.1,3.9,4.2,4.4,4.0,71,6,3.8

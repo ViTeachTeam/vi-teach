@@ -1,0 +1,11 @@
+student_id,student_name,gender,class_name,teacher_name,subject,oral_score,score_15m,bonus,penalty,midterm,final,practice,project,class_activity,attendance,homework_missing,participation
+C001,Hoang Minh Duc,Nam,12C1,Nguyen Thi Thu,Chemistry,7.9,7.6,0.2,0,7.4,7.8,7.9,8.0,7.5,95,1,7.4
+C002,Le Bao Tran,Nu,12C1,Nguyen Thi Thu,Chemistry,6.2,6.0,0,0.1,5.8,5.9,6.1,6.2,5.7,89,2,5.8
+C003,Tran Gia Bao,Nam,12C1,Nguyen Thi Thu,Chemistry,8.7,8.4,0.3,0,8.5,8.8,8.6,8.9,8.4,98,0,8.6
+C004,Do Nhat Linh,Nu,12C1,Nguyen Thi Thu,Chemistry,5.5,5.2,0,0.2,4.9,4.8,5.1,5.3,4.7,82,4,4.6
+C005,Bui Quoc Viet,Nam,12C1,Nguyen Thi Thu,Chemistry,7.0,6.8,0.1,0,6.6,6.9,7.1,7.0,6.5,92,1,6.7
+C006,Nguyen Mai Huong,Nu,12C1,Nguyen Thi Thu,Chemistry,9.1,8.8,0.3,0,8.9,9.2,9.0,9.3,8.8,100,0,9.0
+C007,Pham Anh Tuan,Nam,12C1,Nguyen Thi Thu,Chemistry,6.6,6.3,0.1,0,6.0,6.2,6.5,6.6,6.1,90,2,6.0
+C008,Le Quynh Chi,Nu,12C1,Nguyen Thi Thu,Chemistry,5.0,4.9,0,0.3,4.5,4.2,4.8,4.9,4.3,78,5,4.1
+C009,Vu Minh Phuong,Nu,12C1,Nguyen Thi Thu,Chemistry,8.3,8.0,0.2,0,7.9,8.4,8.2,8.5,8.1,97,0,8.2
+C010,Tran Duc Nam,Nam,12C1,Nguyen Thi Thu,Chemistry,6.1,5.9,0,0.1,5.6,5.5,5.8,6.0,5.4,87,3,5.5

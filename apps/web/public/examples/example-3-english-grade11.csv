@@ -1,0 +1,11 @@
+student_id,student_name,gender,class_name,teacher_name,subject,oral_score,score_15m,bonus,penalty,midterm,final,practice,project,class_activity,attendance,homework_missing,participation
+E001,Nguyen Ha Linh,Nu,11A3,Le Thu Huong,English,8.4,8.1,0.2,0,7.9,8.3,8.5,8.7,8.6,98,0,8.8
+E002,Tran Quoc Bao,Nam,11A3,Le Thu Huong,English,6.8,6.5,0.1,0,6.2,6.1,6.6,6.4,6.0,91,1,6.1
+E003,Pham Minh Chau,Nu,11A3,Le Thu Huong,English,7.5,7.2,0.1,0,7.0,7.4,7.6,7.8,7.3,94,1,7.5
+E004,Vo Tien Dat,Nam,11A3,Le Thu Huong,English,5.7,5.5,0,0.2,5.1,4.9,5.2,5.4,5.0,84,3,4.8
+E005,Bui Thanh Van,Nu,11A3,Le Thu Huong,English,8.9,8.6,0.3,0,8.7,9.0,8.8,9.1,8.9,100,0,9.0
+E006,Dang Gia Huy,Nam,11A3,Le Thu Huong,English,6.3,6.1,0,0.1,5.9,5.7,6.0,6.2,5.8,88,2,5.7
+E007,Le Hoang My,Nu,11A3,Le Thu Huong,English,7.1,6.9,0.1,0,6.8,7.0,7.2,7.1,6.9,92,1,7.0
+E008,Nguyen Duc Long,Nam,11A3,Le Thu Huong,English,4.8,4.6,0,0.3,4.2,4.0,4.5,4.7,4.1,77,5,4.0
+E009,Tran Ngoc Anh,Nu,11A3,Le Thu Huong,English,8.0,7.8,0.2,0,7.7,8.1,8.0,8.3,7.8,95,0,8.1
+E010,Pham Khanh Toan,Nam,11A3,Le Thu Huong,English,5.9,5.8,0,0.1,5.4,5.3,5.6,5.7,5.2,86,3,5.3

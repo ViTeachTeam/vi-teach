@@ -38,10 +38,17 @@ type ChatMessage = {
   content: string;
 };
 
+type DashboardProps = {
+  workspaceIdOverride?: string;
+  teacherNameOverride?: string;
+  teacherEmail?: string;
+  onSignOut?: () => void | Promise<void>;
+};
+
 const initialAnalysis = analyzeClass(parseCsv(sampleCsv));
 const initialLumi = fallbackLumiAnalysis(initialAnalysis);
 
-export function Dashboard() {
+export function Dashboard({ workspaceIdOverride, teacherNameOverride, teacherEmail, onSignOut }: DashboardProps) {
   const [language, setLanguage] = useState<Language>(() => {
     if (typeof window === 'undefined') return 'vi';
     const existing = window.localStorage.getItem('viteach_lang');
@@ -50,6 +57,10 @@ export function Dashboard() {
   const [workspaceId] = useState(() => {
     if (typeof window === 'undefined') return 'demo';
     const storageKey = 'viteach_workspace_id';
+    if (workspaceIdOverride) {
+      window.localStorage.setItem(storageKey, workspaceIdOverride);
+      return workspaceIdOverride;
+    }
     const existing = window.localStorage.getItem(storageKey);
     if (existing) return existing;
     const next = `ws_${Math.random().toString(36).slice(2, 10)}`;
@@ -75,6 +86,7 @@ export function Dashboard() {
     () => analysis.students.find((student) => student.student.id === selectedId) || analysis.students[0],
     [analysis, selectedId]
   );
+  const teacherDisplayName = teacherNameOverride || analysis.teacherName || (language === 'en' ? 'Teacher' : 'Giáo viên');
 
   useEffect(() => {
     setLumi((current) => {
@@ -171,11 +183,11 @@ export function Dashboard() {
         <Separator />
         <Card className="teacher-card">
           <Avatar>
-            <AvatarFallback>{initials(analysis.teacherName)}</AvatarFallback>
+            <AvatarFallback>{initials(teacherDisplayName)}</AvatarFallback>
           </Avatar>
           <div>
-            <strong>{analysis.teacherName || (language === 'en' ? 'Teacher' : 'Giáo viên')}</strong>
-            <span>{language === 'en' ? `Teacher · ${analysis.subject || 'No subject provided'}` : `Giáo viên ${analysis.subject || 'chưa cung cấp môn'}`}</span>
+            <strong>{teacherDisplayName}</strong>
+            <span>{teacherEmail || (language === 'en' ? `Teacher · ${analysis.subject || 'No subject provided'}` : `Giáo viên ${analysis.subject || 'chưa cung cấp môn'}`)}</span>
           </div>
         </Card>
         <Card className="class-card">
@@ -190,7 +202,7 @@ export function Dashboard() {
       <section className="content">
         <header className="topbar">
           <div>
-            <h1>{language === 'en' ? `Hello ${analysis.teacherName || 'Teacher'}` : `Xin chào ${analysis.teacherName || 'giáo viên'}`}</h1>
+            <h1>{language === 'en' ? `Hello ${teacherDisplayName}` : `Xin chào ${teacherDisplayName}`}</h1>
             <p>{language === 'en'
               ? `Track class ${analysis.className}, detect students needing support, and get teaching suggestions from Lumi.`
               : `Theo dõi lớp ${analysis.className}, phát hiện học sinh cần hỗ trợ và nhận gợi ý giảng dạy từ Lumi.`}</p>
@@ -222,6 +234,11 @@ export function Dashboard() {
               <Sparkles />
               {isAnalyzing ? (language === 'en' ? 'Analyzing...' : 'Đang phân tích...') : (language === 'en' ? 'Analyze with Lumi' : 'Phân tích với Lumi')}
             </Button>
+            {onSignOut ? (
+              <Button variant="outline" onClick={() => void onSignOut()}>
+                {language === 'en' ? 'Sign out' : 'Đăng xuất'}
+              </Button>
+            ) : null}
           </div>
         </header>
 
